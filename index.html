@@ -924,7 +924,7 @@ function renderQSummary() {
     <!-- 四半期推移グラフ -->
     <div class="card">
       <h2>四半期 MarketPrice 推移</h2>
-      <p class="sub">月次平均（青）と日次中値平均（紫破線）を四半期ごとに比較</p>
+      <p class="sub">月次平均（青）と全期間日次中値（オレンジ破線）を四半期ごとに比較</p>
       <div class="chart-wrap" style="height:300px"><canvas id="chart-qbar"></canvas></div>
     </div>
 
@@ -966,7 +966,6 @@ function renderQSummary() {
         <thead><tr>
           <th style="text-align:left">期</th>
           <th class="blue">月次平均</th>
-          <th class="purple">日次中値平均</th>
           <th>最高</th>
           <th>最安</th>
           <th class="orange">飼料(円/t)</th>
@@ -978,7 +977,6 @@ function renderQSummary() {
             return `<tr>
               <td style="font-weight:600">${q.label}</td>
               <td class="blue" style="font-weight:700">${q.avg}</td>
-              <td class="purple" style="font-weight:700">${q.dailyMedianAvg??'—'}</td>
               <td class="up">${q.max}</td>
               <td class="down">${q.min}</td>
               <td class="orange">${q.feedPrice?.toLocaleString()||'—'}</td>
@@ -1023,20 +1021,7 @@ function renderQSummary() {
           tension: 0.3,
           order: 1,
         },
-        {
-          type: 'line',
-          label: '日次中値平均',
-          data: dMedians,
-          borderColor: '#7c3aed',
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          borderDash: [5,4],
-          pointRadius: 5,
-          pointBackgroundColor: '#7c3aed',
-          fill: false,
-          tension: 0.3,
-          order: 2,
-        },
+
         {
           type: 'line',
           label: '最高値',
