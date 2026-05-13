@@ -154,7 +154,7 @@
 const DAY_JA = {Mon:'月',Tue:'火',Wed:'水',Thu:'木',Fri:'金',Sat:'土',Sun:'日'};
 let DAILY=[], MONTHLY=[], QUARTERLY=[];
 let currentMonth='';
-let chartDailyMp=null, chartDailySub=null, chartMonthly=null, chartQuarterly=null;
+let chartDailyMp=null, chartDailySub=null, chartMonthly=null, chartQuarterly=null, chartForecast=null;
 
 // ── データ読み込み ──────────────────────────────
 async function loadData() {
@@ -517,6 +517,7 @@ function renderAI() {
     <div class="ai-card">
       <div class="ai-card-title">🔮 翌3ヶ月 価格予測 <span class="ai-badge badge-stable">線形モデル</span></div>
       <div class="ai-insight warn">⚠️ 過去データの線形トレンドに基づく統計的推計です。実際の相場は需給・気候・円相場等により変動します。</div>
+      <div class="chart-wrap" style="height:260px;margin-bottom:14px;"><canvas id="chart-forecast"></canvas></div>
       <div class="forecast-grid">
         ${[0,1,2].map(i=>`<div class="forecast-item">
           <div class="forecast-month">${addMo(latest.yearMonth,i+1)}（予測）</div>
@@ -572,6 +573,136 @@ function renderAI() {
       ${risingCnt>=2?`<div class="ai-insight warn">⚠️ <strong>飼料連続値上げ：</strong> ${risingCnt}期連続の値上げ改定。コスト転嫁の交渉根拠として活用できます。</div>`:''}
       <div class="ai-insight ok">✅ <strong>データ更新：</strong> 毎日 8:30 JST に自動更新されます。</div>
     </div>`;
+
+  // ── 予測グラフ描画 ──────────────────────────
+  // 過去6ヶ月の実績 + 現在 + 予測3ヶ月
+  const histN = Math.min(6, valid.length);
+  const histData = valid.slice(-histN);
+  const histLabels = histData.map(m=>m.yearMonth.slice(2));
+  const histValues = histData.map(m=>m.marketPrice);
+
+  const predLabels = [0,1,2].map(i=>addMo(latest.yearMonth,i+1).slice(2));
+  const predValues = pred;
+  const upperBand  = pred.map((v,i)=>v+conf[i]);
+  const lowerBand  = pred.map((v,i)=>v-conf[i]);
+
+  // 実績ラインの最後と予測ラインの最初をつなぐ接続点
+  const allLabels = [...histLabels, ...predLabels];
+
+  // 実績データ（予測部分はnull）
+  const actualLine = [...histValues, null, null, null];
+  // 予測データ（実績最後の点から始める）
+  const predLine   = [...Array(histN-1).fill(null), latest.marketPrice, ...predValues];
+  // 信頼区間上限（予測部分のみ）
+  const upperLine  = [...Array(histN-1).fill(null), latest.marketPrice, ...upperBand];
+  // 信頼区間下限（予測部分のみ）
+  const lowerLine  = [...Array(histN-1).fill(null), latest.marketPrice, ...lowerBand];
+
+  if (chartForecast) chartForecast.destroy();
+  chartForecast = new Chart(document.getElementById('chart-forecast'), {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        {
+          label: '実績',
+          data: actualLine,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37,99,235,0.08)',
+          borderWidth: 2.5,
+          pointRadius: 5,
+          pointBackgroundColor: '#2563eb',
+          fill: false,
+          tension: 0.3,
+          spanGaps: false,
+          order: 1,
+        },
+        {
+          label: '予測',
+          data: predLine,
+          borderColor: '#7c3aed',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          borderDash: [6, 4],
+          pointRadius: (ctx) => ctx.dataIndex >= histN ? 6 : 0,
+          pointBackgroundColor: '#7c3aed',
+          pointStyle: (ctx) => ctx.dataIndex >= histN ? 'rectRot' : 'circle',
+          fill: false,
+          tension: 0.3,
+          spanGaps: false,
+          order: 2,
+        },
+        {
+          label: '予測上限',
+          data: upperLine,
+          borderColor: 'rgba(124,58,237,0.25)',
+          backgroundColor: 'rgba(124,58,237,0.1)',
+          borderWidth: 1,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: '+1',
+          tension: 0.3,
+          spanGaps: false,
+          order: 3,
+        },
+        {
+          label: '予測下限',
+          data: lowerLine,
+          borderColor: 'rgba(124,58,237,0.25)',
+          backgroundColor: 'rgba(124,58,237,0.1)',
+          borderWidth: 1,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.3,
+          spanGaps: false,
+          order: 4,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#374151',
+            font: { size: 11 },
+            filter: (item) => !['予測上限','予測下限'].includes(item.text),
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              if (ctx.dataset.label === '予測上限' || ctx.dataset.label === '予測下限') return null;
+              return ` ${ctx.dataset.label}: ${ctx.parsed.y}円`;
+            },
+            afterBody: (ctxArr) => {
+              const idx = ctxArr[0]?.dataIndex;
+              if (idx >= histN) {
+                const pi = idx - histN;
+                return [`  信頼区間: ${lowerBand[pi]}〜${upperBand[pi]}円`];
+              }
+              return [];
+            }
+          }
+        },
+        annotation: undefined,
+      },
+      scales: {
+        y: {
+          grid: { color: '#f3f4f6' },
+          ticks: { color: '#6b7280', font: { size: 11 } },
+          title: { display: true, text: '市場価格（円/kg）', color: '#6b7280', font: { size: 10 } },
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6b7280', font: { size: 11 } },
+        }
+      }
+    }
+  });
 }
 
 // 起動
