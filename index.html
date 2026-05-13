@@ -303,23 +303,33 @@ function renderMonthly() {
   const latestFx   = [...MONTHLY].reverse().find(m=>m.usdjpy);
 
   document.getElementById('monthly-kpi').innerHTML = `
-    <div class="kpi"><div class="kpi-label">🐔 最新 市場価格</div>
-      <div class="kpi-value blue">${latest.marketPrice}<small style="font-size:1rem">.00 円/kg</small></div>
-      <div class="kpi-sub">${latest.yearMonth} 時点${diff!=null?'　前月比 '+(diff>=0?'<span class="up">+'+diff+'</span>':'<span class="down">'+diff+'</span>')+'円':''}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div class="kpi"><div class="kpi-label">🐔 最新 市場価格</div>
+        <div class="kpi-value blue">${latest.marketPrice}.00<small style="font-size:.85rem"> 円/kg</small></div>
+        <div class="kpi-sub">${latest.yearMonth} 時点</div>
+      </div>
+      <div class="kpi"><div class="kpi-label">🌾 最新 配合飼料価格</div>
+        <div class="kpi-value orange">${latestFeed?.feedPrice?.toLocaleString()||'—'}<small style="font-size:.8rem"> 円/t</small></div>
+        <div class="kpi-sub">${latestFeed?.yearMonth||''} ${latestFeed?.quarter||''}</div>
+      </div>
     </div>
-    <div class="kpi"><div class="kpi-label">🌾 最新 配合飼料価格</div>
-      <div class="kpi-value orange">${latestFeed?.feedPrice?.toLocaleString()||'—'}<small style="font-size:.8rem"> 円/t</small></div>
-      <div class="kpi-sub">${latestFeed?.yearMonth||''} ${latestFeed?.quarter||''}</div>
-    </div>
-    <div class="kpi"><div class="kpi-label">💴 最新 USD/JPY</div>
-      <div class="kpi-value green">${latestFx?.usdjpy||'—'}<small style="font-size:.9rem"> 円</small></div>
-      <div class="kpi-sub">月末終値</div>
+    <div style="margin-bottom:20px;">
+      <div class="kpi" style="max-width:200px;"><div class="kpi-label">💴 最新 USD/JPY</div>
+        <div class="kpi-value green">${latestFx?.usdjpy||'—'}<small style="font-size:.9rem"> 円</small></div>
+        <div class="kpi-sub">月末終値</div>
+      </div>
     </div>`;
 
   const labels  = data.map(m=>m.yearMonth.slice(2));
   const mps     = data.map(m=>m.marketPrice);
   const feeds   = data.map(m=>{ const f=MONTHLY.find(x=>x.yearMonth===m.yearMonth); return f?.feedPrice||null; });
   const fxs     = data.map(m=>{ const f=MONTHLY.find(x=>x.yearMonth===m.yearMonth); return f?.usdjpy||null; });
+
+  // MarketPrice 中値（全期間メディアン）
+  const mpSorted = [...mps].sort((a,b)=>a-b);
+  const mpMedian = mpSorted.length % 2 === 0
+    ? Math.round((mpSorted[mpSorted.length/2-1] + mpSorted[mpSorted.length/2]) / 2)
+    : mpSorted[Math.floor(mpSorted.length/2)];
 
   // 飼料価格をステップ状に展開（四半期単位で階段表示）
   const feedStep = data.map((m,i) => {
@@ -376,6 +386,20 @@ function renderMonthly() {
           tension: 0.3,
           yAxisID: 'y3',
           order: 3,
+        },
+        {
+          type: 'line',
+          label: '中値',
+          data: Array(mps.length).fill(mpMedian),
+          borderColor: 'rgba(107,114,128,0.6)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          yAxisID: 'y',
+          order: 4,
         }
       ]
     },
@@ -390,6 +414,7 @@ function renderMonthly() {
         tooltip: {
           callbacks: {
             label: (ctx) => {
+              if (ctx.dataset.label === '中値') return ` 中値: ${ctx.parsed.y}円/kg`;
               if (ctx.dataset.label.includes('飼料')) return ` 飼料: ${ctx.parsed.y?.toLocaleString()}円/t`;
               if (ctx.dataset.label.includes('USD')) return ` USD/JPY: ${ctx.parsed.y}円`;
               return ` 市場価格: ${ctx.parsed.y}円/kg`;
