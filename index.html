@@ -9,451 +9,532 @@
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/dist/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background-color: #111827;
             color: #f3f4f6;
             padding: 20px;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        header {
-            margin-bottom: 30px;
-            border-bottom: 1px solid #374151;
-            padding-bottom: 20px;
-        }
-        
-        h1 {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .subtitle {
-            font-size: 14px;
-            color: #9ca3af;
-        }
-        
-        .last-updated {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 10px;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #374151;
-            padding-bottom: 12px;
-        }
-        
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 30px; border-bottom: 1px solid #374151; padding-bottom: 20px; }
+        h1 { font-size: 32px; font-weight: bold; margin-bottom: 8px; }
+        .subtitle { font-size: 14px; color: #9ca3af; }
+        .last-updated { font-size: 12px; color: #6b7280; margin-top: 10px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 30px; border-bottom: 1px solid #374151; padding-bottom: 12px; flex-wrap: wrap; }
         .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            background: none;
-            color: #9ca3af;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 8px;
-            transition: all 0.3s;
+            padding: 10px 20px; border: none; background: none; color: #9ca3af;
+            cursor: pointer; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all 0.3s;
         }
-        
-        .tab-btn:hover {
-            background-color: #1f2937;
-            color: #f3f4f6;
-        }
-        
-        .tab-btn.active {
-            background-color: #2563eb;
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 16px;
-            margin-bottom: 30px;
-        }
-        
+        .tab-btn:hover { background-color: #1f2937; color: #f3f4f6; }
+        .tab-btn.active { background-color: #2563eb; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 30px; }
         .kpi-card {
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            background: #1f2937; border: 1px solid #374151; border-radius: 12px;
+            padding: 20px; display: flex; flex-direction: column; gap: 8px;
         }
-        
-        .kpi-label {
-            font-size: 14px;
-            color: #9ca3af;
-        }
-        
-        .kpi-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #60a5fa;
-        }
-        
-        .kpi-sub {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-        
+        .kpi-label { font-size: 14px; color: #9ca3af; }
+        .kpi-value { font-size: 28px; font-weight: bold; color: #60a5fa; }
+        .kpi-sub { font-size: 12px; color: #6b7280; margin-top: 4px; }
         .chart-container {
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: #1f2937; border: 1px solid #374151; border-radius: 12px;
+            padding: 20px; margin-bottom: 20px;
         }
-        
-        .chart-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #f3f4f6;
-        }
-        
-        .chart-desc {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 16px;
-        }
-        
-        .chart-placeholder {
-            height: 300px;
-            background: #111827;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 12px;
-            overflow: hidden;
-            font-size: 13px;
-        }
-        
-        table thead {
-            background: #111827;
-            border-bottom: 1px solid #374151;
-        }
-        
-        table th {
-            padding: 12px;
-            text-align: left;
-            color: #9ca3af;
-            font-weight: 500;
-        }
-        
-        table td {
-            padding: 12px;
-            border-bottom: 1px solid #374151;
-        }
-        
-        table tbody tr:hover {
-            background: #374151;
-        }
-        
-        table tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
+        .chart-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #f3f4f6; }
+        .chart-desc { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; background: #1f2937; border: 1px solid #374151; border-radius: 12px; overflow: hidden; font-size: 13px; }
+        table thead { background: #111827; border-bottom: 1px solid #374151; }
+        table th { padding: 12px; text-align: left; color: #9ca3af; font-weight: 500; }
+        table td { padding: 12px; border-bottom: 1px solid #374151; }
+        table tbody tr:hover { background: #374151; }
+        table tbody tr:last-child td { border-bottom: none; }
         .value-positive { color: #f87171; }
         .value-negative { color: #4ade80; }
         .value-highlight { color: #60a5fa; font-weight: bold; }
         .value-secondary { color: #a78bfa; }
-        
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        .error { background: #7f1d1d; border: 1px solid #dc2626; border-radius: 8px; padding: 16px; color: #fca5a5; margin-bottom: 20px; }
+
+        /* AI分析スタイル */
+        .ai-section { margin-bottom: 24px; }
+        .ai-card {
+            background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+        }
+        .ai-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .ai-card-title { font-size: 16px; font-weight: 600; color: #f3f4f6; }
+        .ai-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+        }
+        .badge-up { background: #7f1d1d; color: #fca5a5; }
+        .badge-down { background: #14532d; color: #86efac; }
+        .badge-stable { background: #1e3a5f; color: #93c5fd; }
+        .badge-warn { background: #78350f; color: #fcd34d; }
+        .ai-insight {
+            background: #111827; border-left: 3px solid #2563eb; border-radius: 4px;
+            padding: 12px 16px; margin-bottom: 10px; font-size: 14px; line-height: 1.7; color: #d1d5db;
+        }
+        .ai-insight.warn { border-left-color: #f59e0b; }
+        .ai-insight.ok { border-left-color: #10b981; }
+        .ai-insight.alert { border-left-color: #ef4444; }
+        .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
+        .forecast-item {
+            background: #111827; border-radius: 8px; padding: 14px; text-align: center;
+        }
+        .forecast-month { font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
+        .forecast-value { font-size: 24px; font-weight: bold; color: #a78bfa; }
+        .forecast-range { font-size: 11px; color: #6b7280; margin-top: 4px; }
+        .risk-bar-wrap { margin-top: 12px; }
+        .risk-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+        .risk-bar-bg { background: #374151; border-radius: 99px; height: 10px; overflow: hidden; }
+        .risk-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+        .corr-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .corr-table th { text-align: left; padding: 8px 12px; color: #9ca3af; background: #111827; }
+        .corr-table td { padding: 8px 12px; border-top: 1px solid #374151; }
+
         @media (max-width: 768px) {
-            .kpi-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            table {
-                font-size: 11px;
-            }
-            
-            table th, table td {
-                padding: 8px;
-            }
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-        
-        .error {
-            background: #7f1d1d;
-            border: 1px solid #dc2626;
-            border-radius: 8px;
-            padding: 16px;
-            color: #fca5a5;
-            margin-bottom: 20px;
+            .kpi-grid { grid-template-columns: 1fr; }
+            table { font-size: 11px; }
+            table th, table td { padding: 8px; }
+            .forecast-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🐔 鶏肉相場ダッシュボード</h1>
-            <p class="subtitle">東京市場 荷受相場 | 全国食鳥新聞社データ</p>
-            <p class="last-updated" id="lastUpdated">最終更新: —</p>
-        </header>
-        
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('daily')">📅 日次相場</button>
-            <button class="tab-btn" onclick="switchTab('monthly')">📈 月次推移</button>
-            <button class="tab-btn" onclick="switchTab('info')">ℹ️ 説明</button>
-        </div>
-        
-        <!-- 日次タブ -->
-        <div id="daily" class="tab-content active">
-            <div id="daily-content">
-                <div class="loading">⏳ データを読み込み中...</div>
-            </div>
-        </div>
-        
-        <!-- 月次タブ -->
-        <div id="monthly" class="tab-content">
-            <div id="monthly-content">
-                <div class="loading">⏳ データを読み込み中...</div>
-            </div>
-        </div>
-        
-        <!-- 説明タブ -->
-        <div id="info" class="tab-content">
-            <div class="kpi-card" style="max-width: 600px;">
-                <h3 style="margin-bottom: 12px; font-size: 16px;">📊 このダッシュボードについて</h3>
-                <ul style="line-height: 1.8; color: #d1d5db; list-position: inside;">
-                    <li><strong>データ源</strong>: 全国食鳥新聞社（日本経済新聞掲載 荷受相場）</li>
-                    <li><strong>更新頻度</strong>: 毎日 7:00 JST 自動更新</li>
-                    <li><strong>市場価格計算式</strong>: (もも加重×0.55 + むね加重×0.45) × 0.32</li>
-                    <li><strong>用途</strong>: 鶏肉市場価格と飼料コストの相関分析</li>
-                </ul>
-                
-                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 16px;">📌 重要な指標</h3>
-                <ul style="line-height: 1.8; color: #d1d5db; list-position: inside;">
-                    <li><strong>市場価格</strong>: 鶏肉の実売価格目安（円/kg）</li>
-                    <li><strong>もも加重</strong>: もも肉の加重平均価格</li>
-                    <li><strong>むね加重</strong>: むね肉の加重平均価格</li>
-                    <li><strong>為替（USD/JPY）</strong>: 飼料輸入価格に影響</li>
-                </ul>
-                
-                <p style="margin-top: 24px; color: #9ca3af; font-size: 12px;">
-                    ※このダッシュボードは自動更新されます。30分ごとにページを再読み込みしてください。
-                </p>
-            </div>
+<div class="container">
+    <header>
+        <h1>🐔 鶏肉相場ダッシュボード</h1>
+        <p class="subtitle">東京市場 荷受相場 | 全国食鳥新聞社データ</p>
+        <p class="last-updated" id="lastUpdated">最終更新: —</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('daily', this)">📅 日次相場</button>
+        <button class="tab-btn" onclick="switchTab('monthly', this)">📈 月次推移</button>
+        <button class="tab-btn" onclick="switchTab('ai', this)">🤖 AI分析</button>
+        <button class="tab-btn" onclick="switchTab('info', this)">ℹ️ 説明</button>
+    </div>
+
+    <!-- 日次タブ -->
+    <div id="daily" class="tab-content active">
+        <div id="daily-content"><div class="loading">⏳ データを読み込み中...</div></div>
+    </div>
+
+    <!-- 月次タブ -->
+    <div id="monthly" class="tab-content">
+        <div id="monthly-content"><div class="loading">⏳ データを読み込み中...</div></div>
+    </div>
+
+    <!-- AI分析タブ -->
+    <div id="ai" class="tab-content">
+        <div id="ai-content"><div class="loading">⏳ データを読み込み中...</div></div>
+    </div>
+
+    <!-- 説明タブ -->
+    <div id="info" class="tab-content">
+        <div class="kpi-card" style="max-width: 600px;">
+            <h3 style="margin-bottom: 12px; font-size: 16px;">📊 このダッシュボードについて</h3>
+            <ul style="line-height: 1.8; color: #d1d5db; list-style: disc; padding-left: 20px;">
+                <li><strong>データ源</strong>: 全国食鳥新聞社（日本経済新聞掲載 荷受相場）</li>
+                <li><strong>更新頻度</strong>: 毎日 8:30 JST 自動更新</li>
+                <li><strong>市場価格計算式</strong>: INT((もも加重×0.55 + むね加重×0.45) × 0.32)</li>
+                <li><strong>月次市場価格</strong>: INT(日次市場価格の月間平均)</li>
+                <li><strong>用途</strong>: 鶏肉市場価格と飼料コストの相関分析・仕入交渉資料</li>
+            </ul>
+            <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 16px;">📌 重要な指標</h3>
+            <ul style="line-height: 1.8; color: #d1d5db; list-style: disc; padding-left: 20px;">
+                <li><strong>市場価格</strong>: 鶏肉の実売価格目安（円/kg）</li>
+                <li><strong>もも加重</strong>: もも肉の加重平均価格（東京市場）</li>
+                <li><strong>むね加重</strong>: むね肉の加重平均価格（東京市場）</li>
+                <li><strong>飼料価格</strong>: 配合飼料価格（円/t・四半期改定）</li>
+                <li><strong>為替（USD/JPY）</strong>: 飼料輸入価格に直結。155円超で翌期値上げリスク↑</li>
+            </ul>
+            <p style="margin-top: 24px; color: #9ca3af; font-size: 12px;">
+                ※このダッシュボードは自動更新されます。30分ごとにページを再読み込みします。<br>
+                ※AI分析タブの予測は統計的傾向に基づくもので、実際の市場価格を保証するものではありません。
+            </p>
         </div>
     </div>
-    
-    <script>
-        const DAY_MAP = { 'Mon': '月', 'Tue': '火', 'Wed': '水', 'Thu': '木', 'Fri': '金', 'Sat': '土', 'Sun': '日' };
-        let dailyData = [];
-        
-        async function loadData() {
-            try {
-                const response = await fetch('https://ricesan7.github.io/chicken-market-dashboard/data.json?_=' + Date.now());
-                const result = await response.json();
-                
-                if (!result.ok) throw new Error(result.error || 'データ読み込みエラー');
-                
-                dailyData = result.daily || [];
-                renderDaily();
-                renderMonthly();
-                
-                const date = new Date(result.fetchedAt);
-                document.getElementById('lastUpdated').textContent = 
-                    `最終更新: ${date.toLocaleString('ja-JP')}`;
-            } catch (error) {
-                console.error(error);
-                document.getElementById('daily-content').innerHTML = 
-                    `<div class="error">❌ データの読み込みに失敗しました: ${error.message}</div>`;
-            }
-        }
-        
-        function renderDaily() {
-            const months = [...new Set(dailyData.map(d => d.yearMonth))].sort().reverse();
-            const currentMonth = months[0];
-            const filtered = dailyData.filter(d => d.yearMonth === currentMonth).sort((a, b) => a.date.localeCompare(b.date));
-            
-            if (!filtered.length) return;
-            
-            const latest = filtered[filtered.length - 1];
-            const prev = filtered[filtered.length - 2];
-            const mpDiff = latest && prev && latest.marketPrice != null && prev.marketPrice != null
-                ? (latest.marketPrice - prev.marketPrice).toFixed(2)
-                : null;
-            
-            const monthAvg = filtered.filter(d => d.marketPrice).length
-                ? (filtered.reduce((s, d) => s + (d.marketPrice || 0), 0) / filtered.filter(d => d.marketPrice).length).toFixed(2)
-                : null;
-            
-            let html = `
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-label">🐔 最新 市場価格 (${latest.date})</div>
-                        <div class="kpi-value">${latest.marketPrice?.toFixed(2) || '—'}</div>
-                        <div class="kpi-sub">前日比 ${mpDiff != null ? (mpDiff > 0 ? '+' : '') + mpDiff : '—'}円</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">もも加重 / むね加重</div>
-                        <div class="kpi-value" style="font-size: 24px;">${latest.momoWeighted} / ${latest.muneWeighted}</div>
-                        <div class="kpi-sub">${DAY_MAP[latest.dayOfWeek]}曜日</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">📊 ${currentMonth} 市場価格 月間平均</div>
-                        <div class="kpi-value">${monthAvg || '—'}</div>
-                        <div class="kpi-sub">${filtered.filter(d => d.marketPrice).length}営業日</div>
-                    </div>
-                </div>
-                
-                <div class="chart-container">
-                    <div class="chart-title">${currentMonth} 日次 市場価格</div>
-                    <div class="chart-desc">計算式: (もも加重×0.55 + むね加重×0.45) × 0.32</div>
-                    <div class="chart-placeholder">📈 Recharts統合版で表示（簡易版は上記テーブルを参照）</div>
-                </div>
-                
-                <div class="chart-container">
-                    <div class="chart-title">${currentMonth} 日次相場データ</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>日付</th>
-                                <th>曜日</th>
-                                <th style="color: #60a5fa;">市場価格</th>
-                                <th>もも加重</th>
-                                <th>むね加重</th>
-                                <th>もも販売量(t)</th>
-                                <th>むね販売量(t)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            [...filtered].reverse().forEach(row => {
-                html += `
-                    <tr>
-                        <td>${row.date}</td>
-                        <td>${DAY_MAP[row.dayOfWeek] || row.dayOfWeek}</td>
-                        <td class="value-highlight">${row.marketPrice?.toFixed(2) || '—'}</td>
-                        <td class="value-secondary">${row.momoWeighted || '—'}</td>
-                        <td class="value-secondary">${row.muneWeighted || '—'}</td>
-                        <td>${row.momoVolume || '—'}</td>
-                        <td>${row.muneVolume || '—'}</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            
-            document.getElementById('daily-content').innerHTML = html;
-        }
-        
-        function renderMonthly() {
-            const byMonth = {};
-            dailyData.forEach(d => {
-                if (!byMonth[d.yearMonth]) byMonth[d.yearMonth] = [];
-                if (d.marketPrice != null) byMonth[d.yearMonth].push(d.marketPrice);
-            });
-            
-            const data = Object.entries(byMonth)
-                .map(([ym, prices]) => ({
-                    yearMonth: ym,
-                    avgPrice: prices.length ? (prices.reduce((s, p) => s + p, 0) / prices.length).toFixed(2) : null,
-                    count: prices.length,
-                }))
-                .sort((a, b) => a.yearMonth.localeCompare(b.yearMonth));
-            
-            if (!data.length) return;
-            
-            let html = `
-                <div class="chart-container">
-                    <div class="chart-title">月次 市場価格推移</div>
-                    <div class="chart-placeholder">📈 チャート表示（簡易版は下記テーブルを参照）</div>
-                </div>
-                
-                <div class="chart-container">
-                    <div class="chart-title">月別 市場価格平均</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>年月</th>
-                                <th style="color: #60a5fa;">市場価格平均</th>
-                                <th>営業日数</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            [...data].reverse().forEach(row => {
-                html += `
-                    <tr>
-                        <td>${row.yearMonth}</td>
-                        <td class="value-highlight">${row.avgPrice || '—'}円/kg</td>
-                        <td>${row.count}日</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            
-            document.getElementById('monthly-content').innerHTML = html;
-        }
-        
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
-        
-        // 初期読み込み
-        loadData();
-        
-        // 30分ごとに自動リロード
-        setInterval(() => {
-            loadData();
-        }, 30 * 60 * 1000);
-    </script>
+</div>
+
+<script>
+const DAY_MAP = { 'Mon':'月','Tue':'火','Wed':'水','Thu':'木','Fri':'金','Sat':'土','Sun':'日' };
+let allData = {};
+
+async function loadData() {
+    try {
+        const response = await fetch('https://ricesan7.github.io/chicken-market-dashboard/data.json?_=' + Date.now());
+        const result = await response.json();
+        if (!result.ok) throw new Error(result.error || 'データ読み込みエラー');
+        allData = result;
+        renderDaily(result.daily || []);
+        renderMonthly(result.daily || [], result.monthly || []);
+        renderAI(result.daily || [], result.monthly || [], result.quarterly || []);
+        document.getElementById('lastUpdated').textContent = `最終更新: ${result.fetchedAt}`;
+    } catch (error) {
+        console.error(error);
+        document.getElementById('daily-content').innerHTML = `<div class="error">❌ データの読み込みに失敗しました: ${error.message}</div>`;
+    }
+}
+
+function renderDaily(dailyData) {
+    const months = [...new Set(dailyData.map(d => d.yearMonth))].sort().reverse();
+    const currentMonth = months[0];
+    const filtered = dailyData.filter(d => d.yearMonth === currentMonth).sort((a,b) => a.date.localeCompare(b.date));
+    if (!filtered.length) return;
+    const latest = filtered[filtered.length-1];
+    const prev   = filtered[filtered.length-2];
+    const mpDiff = (latest && prev && latest.marketPrice != null && prev.marketPrice != null)
+        ? (latest.marketPrice - prev.marketPrice).toFixed(2) : null;
+    const validMPs = filtered.filter(d => d.marketPrice != null);
+    const monthAvg = validMPs.length ? Math.floor(validMPs.reduce((s,d) => s+d.marketPrice,0)/validMPs.length) : null;
+
+    let html = `
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">🐔 最新 市場価格 (${latest.date})</div>
+                <div class="kpi-value">${latest.marketPrice != null ? latest.marketPrice : '—'}<small style="font-size:14px;margin-left:4px;">円/kg</small></div>
+                <div class="kpi-sub">前日比 ${mpDiff != null ? (mpDiff>0?'<span class="value-positive">+'+mpDiff+'</span>':'<span class="value-negative">'+mpDiff+'</span>') : '—'}円</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">もも加重 / むね加重</div>
+                <div class="kpi-value" style="font-size:24px;">${latest.momoWeighted} / ${latest.muneWeighted}</div>
+                <div class="kpi-sub">${DAY_MAP[latest.dayOfWeek]}曜日</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">📊 ${currentMonth} 月間平均市場価格</div>
+                <div class="kpi-value">${monthAvg != null ? monthAvg : '—'}<small style="font-size:14px;margin-left:4px;">円/kg</small></div>
+                <div class="kpi-sub">${validMPs.length}営業日集計</div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">${currentMonth} 日次相場データ</div>
+            <div class="chart-desc">計算式: INT((もも加重×0.55 + むね加重×0.45) × 0.32)</div>
+            <table>
+                <thead><tr>
+                    <th>日付</th><th>曜</th>
+                    <th style="color:#60a5fa;">市場価格</th>
+                    <th>もも加重</th><th>むね加重</th>
+                    <th>もも量(t)</th><th>むね量(t)</th>
+                </tr></thead>
+                <tbody>`;
+    [...filtered].reverse().forEach(row => {
+        html += `<tr>
+            <td>${row.date}</td>
+            <td>${DAY_MAP[row.dayOfWeek]||row.dayOfWeek}</td>
+            <td class="value-highlight">${row.marketPrice != null ? row.marketPrice : '—'}</td>
+            <td class="value-secondary">${row.momoWeighted||'—'}</td>
+            <td class="value-secondary">${row.muneWeighted||'—'}</td>
+            <td>${row.momoVolume||'—'}</td>
+            <td>${row.muneVolume||'—'}</td>
+        </tr>`;
+    });
+    html += `</tbody></table></div>`;
+    document.getElementById('daily-content').innerHTML = html;
+}
+
+function renderMonthly(dailyData, monthlyData) {
+    const monthlyMPs = {};
+    monthlyData.forEach(m => { if (m.marketPrice != null) monthlyMPs[m.yearMonth] = m.marketPrice; });
+
+    let html = `
+        <div class="chart-container">
+            <div class="chart-title">月別 市場価格・飼料価格推移</div>
+            <div class="chart-desc">市場価格 = INT(日次MarketPriceの月平均) ／ 飼料価格 = 四半期改定値（円/t）</div>
+            <table>
+                <thead><tr>
+                    <th>年月</th><th>Q</th>
+                    <th style="color:#60a5fa;">市場価格(円/kg)</th>
+                    <th style="color:#a78bfa;">飼料価格(円/t)</th>
+                    <th>飼料変動</th>
+                    <th>USD/JPY</th>
+                </tr></thead>
+                <tbody>`;
+    [...monthlyData].reverse().forEach(row => {
+        const mp = row.marketPrice;
+        const fc = row.feedChange;
+        html += `<tr>
+            <td>${row.yearMonth}</td>
+            <td>${row.quarter||'—'}</td>
+            <td class="value-highlight">${mp != null ? mp : '—'}</td>
+            <td class="value-secondary">${row.feedPrice ? row.feedPrice.toLocaleString() : '—'}</td>
+            <td>${fc != null ? (fc>0 ? '<span class="value-positive">+'+fc.toLocaleString()+'</span>' : '<span class="value-negative">'+fc.toLocaleString()+'</span>') : '—'}</td>
+            <td>${row.usdjpy != null ? row.usdjpy : '—'}</td>
+        </tr>`;
+    });
+    html += `</tbody></table></div>`;
+    document.getElementById('monthly-content').innerHTML = html;
+}
+
+// ────────────────────────────────────────────────
+//  AI分析 レンダリング
+// ────────────────────────────────────────────────
+function renderAI(dailyData, monthlyData, quarterlyData) {
+    const validMonthly = monthlyData.filter(m => m.marketPrice != null).sort((a,b) => a.yearMonth.localeCompare(b.yearMonth));
+    if (validMonthly.length < 3) {
+        document.getElementById('ai-content').innerHTML = '<div class="loading">データが不足しています</div>';
+        return;
+    }
+
+    // ── 基本統計 ──
+    const recent3 = validMonthly.slice(-3);
+    const recent6 = validMonthly.slice(-6);
+    const allPrices = validMonthly.map(m => m.marketPrice);
+    const latestMonth = validMonthly[validMonthly.length-1];
+    const prevMonth   = validMonthly[validMonthly.length-2];
+    const mom_change  = latestMonth.marketPrice - prevMonth.marketPrice;  // 前月比
+
+    // 3ヶ月移動平均
+    const ma3 = recent3.reduce((s,m) => s+m.marketPrice,0) / 3;
+    // 6ヶ月平均
+    const avg6 = recent6.reduce((s,m) => s+m.marketPrice,0) / 6;
+    // 標準偏差（全期間）
+    const mean = allPrices.reduce((s,p) => s+p,0)/allPrices.length;
+    const std  = Math.sqrt(allPrices.reduce((s,p) => s+(p-mean)**2,0)/allPrices.length);
+
+    // ── トレンド判定 ──
+    // 直近3ヶ月の線形回帰スロープ
+    const xs = [0,1,2], ys = recent3.map(m => m.marketPrice);
+    const xm = 1, ym = ys.reduce((s,y)=>s+y,0)/3;
+    const slope = xs.reduce((s,x,i)=>s+(x-xm)*(ys[i]-ym),0) / xs.reduce((s,x)=>s+(x-xm)**2,0);
+
+    let trendLabel, trendBadge, trendClass;
+    if      (slope >  2) { trendLabel='上昇傾向'; trendBadge='badge-up';     trendClass='alert'; }
+    else if (slope < -2) { trendLabel='下落傾向'; trendBadge='badge-down';   trendClass='ok';    }
+    else                 { trendLabel='横ばい';   trendBadge='badge-stable'; trendClass='';      }
+
+    // ── 予測（線形外挿）──
+    const lastMP = latestMonth.marketPrice;
+    const pred1 = Math.round(lastMP + slope);
+    const pred2 = Math.round(lastMP + slope*2);
+    const pred3 = Math.round(lastMP + slope*3);
+    const confRange = Math.round(std * 0.5);
+
+    // ── 飼料リスク分析 ──
+    const latestFeed = [...monthlyData].reverse().find(m => m.feedPrice);
+    const latestUSD  = [...monthlyData].reverse().find(m => m.usdjpy);
+    const usdRate    = latestUSD?.usdjpy || 0;
+    const feedTrend  = quarterlyData.length >= 2
+        ? quarterlyData[quarterlyData.length-1].changeFromPrev - quarterlyData[quarterlyData.length-2].changeFromPrev
+        : 0;
+
+    // 為替リスクスコア 0〜100
+    const fxRisk = Math.min(100, Math.max(0, Math.round((usdRate - 140) / (170-140) * 100)));
+    // 飼料連続値上げカウント
+    const lastQ = quarterlyData.slice(-3);
+    const risingCount = lastQ.filter(q => q.changeFromPrev > 0).length;
+    const feedRisk = Math.min(100, risingCount * 33 + (fxRisk > 70 ? 20 : 0));
+
+    // ── 相関分析 ──
+    const corrData = validMonthly.filter(m => m.usdjpy && m.feedPrice);
+    function pearson(xs, ys) {
+        const n=xs.length, mx=xs.reduce((s,x)=>s+x,0)/n, my=ys.reduce((s,y)=>s+y,0)/n;
+        const num=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+        const den=Math.sqrt(xs.reduce((s,x)=>s+(x-mx)**2,0)*ys.reduce((s,y)=>s+(y-my)**2,0));
+        return den===0?0:num/den;
+    }
+    const fxArr   = corrData.map(m=>m.usdjpy);
+    const mpArr   = corrData.map(m=>m.marketPrice);
+    const fpArr   = corrData.map(m=>m.feedPrice);
+    const corrFxMp  = pearson(fxArr, mpArr).toFixed(3);
+    const corrFpMp  = pearson(fpArr, mpArr).toFixed(3);
+    const corrFxFp  = pearson(fxArr, fpArr).toFixed(3);
+
+    // ── 月間レンジ分析 ──
+    const validDays = dailyData.filter(d => d.marketPrice != null);
+    const latestMonthDays = validDays.filter(d => d.yearMonth === latestMonth.yearMonth);
+    const dayMPs = latestMonthDays.map(d => d.marketPrice);
+    const dayMin = dayMPs.length ? Math.min(...dayMPs) : null;
+    const dayMax = dayMPs.length ? Math.max(...dayMPs) : null;
+    const dayRange = (dayMin!=null && dayMax!=null) ? dayMax-dayMin : null;
+
+    // ── 月名計算 ──
+    function addMonths(ym, n) {
+        const [y,m] = ym.split('/').map(Number);
+        const d = new Date(y, m-1+n, 1);
+        return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    }
+    const m1 = addMonths(latestMonth.yearMonth, 1);
+    const m2 = addMonths(latestMonth.yearMonth, 2);
+    const m3 = addMonths(latestMonth.yearMonth, 3);
+
+    // ── トレンド要因コメント ──
+    let trendReason = '';
+    if (slope > 2) {
+        trendReason = `直近3ヶ月で月あたり約${Math.abs(slope.toFixed(1))}円の上昇が続いています。飼料コストの高止まりと円安継続が背景にあると考えられます。`;
+    } else if (slope < -2) {
+        trendReason = `直近3ヶ月で月あたり約${Math.abs(slope.toFixed(1))}円の下落傾向にあります。需給バランスの改善または円高方向への推移が影響している可能性があります。`;
+    } else {
+        trendReason = `直近3ヶ月は安定した推移（月あたり変動±${Math.abs(slope.toFixed(1))}円以内）を示しています。飼料コストと需要のバランスが均衡している状況です。`;
+    }
+
+    // ── 為替コメント ──
+    let fxComment = '';
+    if (usdRate >= 155) {
+        fxComment = `現在の為替レートは${usdRate}円/ドルと高水準です。過去のデータでは155円超が翌四半期の飼料値上げと相関しており、次期改定での上昇リスクが高まっています。`;
+    } else if (usdRate >= 150) {
+        fxComment = `為替レートは${usdRate}円/ドルと150円台を維持しています。急激な円安方向への転換には注意が必要ですが、現時点では緊急性は限定的です。`;
+    } else {
+        fxComment = `為替レートは${usdRate}円/ドルと比較的円高水準です。飼料輸入コストへの圧力は緩和されており、次期飼料価格は横ばいまたは下落が期待されます。`;
+    }
+
+    // ── HTML生成 ──
+    let html = `
+    <!-- 1. トレンド分析 -->
+    <div class="ai-card">
+        <div class="ai-card-header">
+            <div class="ai-card-title">📈 市場価格トレンド分析</div>
+            <span class="ai-badge ${trendBadge}">${trendLabel}</span>
+        </div>
+        <div class="ai-insight ${trendClass}">
+            <strong>現在の状況：</strong> ${latestMonth.yearMonth} の市場価格は <strong>${latestMonth.marketPrice}円/kg</strong>。
+            前月比 ${mom_change>=0?'<span class="value-positive">+'+mom_change+'</span>':'<span class="value-negative">'+mom_change+'</span>'} 円、
+            直近3ヶ月平均 <strong>${ma3.toFixed(1)}円</strong>、直近6ヶ月平均 <strong>${avg6.toFixed(1)}円</strong>。
+        </div>
+        <div class="ai-insight">
+            <strong>トレンド評価：</strong> ${trendReason}
+        </div>
+        ${dayRange != null ? `
+        <div class="ai-insight ok">
+            <strong>${latestMonth.yearMonth} 日次レンジ：</strong> 最低 ${dayMin}円 〜 最高 ${dayMax}円（レンジ幅 ${dayRange}円）。
+            ${dayRange <= 5 ? '値動きが非常に安定しており、相場が落ち着いた状態です。' : dayRange >= 10 ? 'レンジ幅が広く、需給の不安定さが見られます。' : '標準的な値動きの範囲内です。'}
+        </div>` : ''}
+    </div>
+
+    <!-- 2. 価格予測 -->
+    <div class="ai-card">
+        <div class="ai-card-header">
+            <div class="ai-card-title">🔮 市場価格 翌3ヶ月予測</div>
+            <span class="ai-badge badge-stable">統計モデル</span>
+        </div>
+        <div class="ai-insight warn">
+            ⚠️ 以下の予測は過去データの線形トレンドに基づく統計的推計です。実際の相場は需給・気候・円相場等により変動します。
+        </div>
+        <div class="forecast-grid">
+            <div class="forecast-item">
+                <div class="forecast-month">${m1}（予測）</div>
+                <div class="forecast-value">${pred1}</div>
+                <div class="forecast-range">±${confRange}円の幅</div>
+            </div>
+            <div class="forecast-item">
+                <div class="forecast-month">${m2}（予測）</div>
+                <div class="forecast-value">${pred2}</div>
+                <div class="forecast-range">±${Math.round(confRange*1.3)}円の幅</div>
+            </div>
+            <div class="forecast-item">
+                <div class="forecast-month">${m3}（予測）</div>
+                <div class="forecast-value">${pred3}</div>
+                <div class="forecast-range">±${Math.round(confRange*1.6)}円の幅</div>
+            </div>
+        </div>
+        <div class="ai-insight" style="margin-top:12px;">
+            <strong>モデル根拠：</strong> 直近3ヶ月の線形回帰スロープ（月あたり${slope.toFixed(1)}円）を使用。
+            過去${allPrices.length}ヶ月データの標準偏差 ${std.toFixed(1)}円 を信頼区間の基準に使用。
+        </div>
+    </div>
+
+    <!-- 3. 飼料コストリスク -->
+    <div class="ai-card">
+        <div class="ai-card-header">
+            <div class="ai-card-title">🌾 飼料コストリスク評価</div>
+            <span class="ai-badge ${feedRisk>=60?'badge-up':feedRisk>=30?'badge-warn':'badge-down'}">${feedRisk>=60?'高リスク':feedRisk>=30?'中リスク':'低リスク'}</span>
+        </div>
+        <div class="risk-bar-wrap">
+            <div class="risk-bar-label"><span>為替リスク (USD/JPY=${usdRate})</span><span>${fxRisk}%</span></div>
+            <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${fxRisk}%;background:${fxRisk>=70?'#ef4444':fxRisk>=50?'#f59e0b':'#10b981'};"></div></div>
+        </div>
+        <div class="risk-bar-wrap" style="margin-top:10px;">
+            <div class="risk-bar-label"><span>飼料値上げリスク（直近${lastQ.length}四半期）</span><span>${feedRisk}%</span></div>
+            <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${feedRisk}%;background:${feedRisk>=60?'#ef4444':feedRisk>=30?'#f59e0b':'#10b981'};"></div></div>
+        </div>
+        <div class="ai-insight" style="margin-top:14px;">
+            <strong>為替動向：</strong> ${fxComment}
+        </div>
+        <div class="ai-insight ${risingCount>=2?'alert':'ok'}">
+            <strong>飼料改定履歴：</strong> 直近${lastQ.length}四半期のうち ${risingCount}期が値上げ改定。
+            ${lastQ.map(q => `${q.year}/${q.quarter}: ${q.changeFromPrev>=0?'+':''}${(q.changeFromPrev||0).toLocaleString()}円`).join(' → ')}.
+            ${risingCount>=2 ? '連続値上げが続いており、コスト圧力が高い状態です。交渉材料として活用を推奨します。' : '値上げ圧力は一部に留まっており、現時点での緊急性は低めです。'}
+        </div>
+    </div>
+
+    <!-- 4. 相関分析 -->
+    <div class="ai-card">
+        <div class="ai-card-header">
+            <div class="ai-card-title">🔗 主要指標 相関分析</div>
+            <span class="ai-badge badge-stable">${corrData.length}ヶ月データ</span>
+        </div>
+        <table class="corr-table">
+            <thead><tr><th>指標ペア</th><th>相関係数</th><th>解釈</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>USD/JPY ↔ 市場価格</td>
+                    <td class="${Math.abs(corrFxMp)>0.6?'value-highlight':'value-secondary'}">${corrFxMp}</td>
+                    <td>${Math.abs(corrFxMp)>0.6?'強い相関':Math.abs(corrFxMp)>0.3?'中程度の相関':'弱い相関'} ${corrFxMp>0?'（円安→価格上昇傾向）':'（円安→価格下落傾向）'}</td>
+                </tr>
+                <tr>
+                    <td>飼料価格 ↔ 市場価格</td>
+                    <td class="${Math.abs(corrFpMp)>0.6?'value-highlight':'value-secondary'}">${corrFpMp}</td>
+                    <td>${Math.abs(corrFpMp)>0.6?'強い相関':Math.abs(corrFpMp)>0.3?'中程度の相関':'弱い相関'} ${corrFpMp>0?'（飼料高→価格上昇傾向）':'（飼料高→価格下落傾向）'}</td>
+                </tr>
+                <tr>
+                    <td>USD/JPY ↔ 飼料価格</td>
+                    <td class="${Math.abs(corrFxFp)>0.6?'value-highlight':'value-secondary'}">${corrFxFp}</td>
+                    <td>${Math.abs(corrFxFp)>0.6?'強い相関':Math.abs(corrFxFp)>0.3?'中程度の相関':'弱い相関'} ${corrFxFp>0?'（円安→飼料高傾向）':'（円安→飼料安傾向）'}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="ai-insight" style="margin-top:12px;">
+            <strong>総合コメント：</strong>
+            ${Math.abs(corrFxFp)>0.5
+                ? 'USD/JPYと飼料価格の相関が高く、円相場が飼料コストの先行指標として機能しています。'
+                : 'USD/JPYと飼料価格の直接的な相関は限定的であり、他の要因（穀物相場・海上運賃）の影響が大きい可能性があります。'}
+            ${Math.abs(corrFpMp)>0.5
+                ? ' 飼料価格は市場価格にも有意な影響を与えており、飼料改定後の相場動向に注目が必要です。'
+                : ' 市場価格は飼料コスト以外の要因（需給・季節性等）にも強く左右されている状況です。'}
+        </div>
+    </div>
+
+    <!-- 5. アクション推奨 -->
+    <div class="ai-card">
+        <div class="ai-card-header">
+            <div class="ai-card-title">💡 推奨アクション</div>
+        </div>
+        ${slope > 2 ? `
+        <div class="ai-insight alert">
+            📌 <strong>価格上昇局面：</strong> 相場の上昇が続いているため、早期の仕入価格交渉・ロック検討を推奨します。
+        </div>` : slope < -2 ? `
+        <div class="ai-insight ok">
+            📌 <strong>価格下落局面：</strong> 相場が下落傾向にあります。スポット仕入れのタイミングとして有利な局面です。
+        </div>` : `
+        <div class="ai-insight">
+            📌 <strong>安定局面：</strong> 現在の相場は比較的安定しています。通常の仕入れサイクルを維持しながら、飼料改定情報を注視してください。
+        </div>`}
+        ${usdRate >= 155 ? `
+        <div class="ai-insight warn">
+            ⚠️ <strong>為替警戒：</strong> USD/JPY ${usdRate}円と高水準。飼料の次期改定（翌四半期）での値上げリスクを見越した対応を検討ください。
+        </div>` : ''}
+        ${risingCount >= 2 ? `
+        <div class="ai-insight warn">
+            ⚠️ <strong>飼料コスト継続上昇：</strong> ${risingCount}期連続の値上げ改定が続いています。コスト転嫁の交渉根拠としてこのデータを活用できます。
+        </div>` : ''}
+        <div class="ai-insight ok">
+            ✅ <strong>データ更新：</strong> 毎日8:30 JSTに自動更新されます。翌日の相場確認は午前9時以降を推奨します。
+        </div>
+    </div>`;
+
+    document.getElementById('ai-content').innerHTML = html;
+}
+
+function switchTab(tabName, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabName).classList.add('active');
+    if (btn) btn.classList.add('active');
+}
+
+loadData();
+setInterval(() => loadData(), 30 * 60 * 1000);
+</script>
 </body>
 </html>
