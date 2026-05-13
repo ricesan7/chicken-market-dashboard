@@ -917,7 +917,7 @@ function renderQSummary() {
           ${qData.map((q,i) => {
             const prevQ = i>0?qData[i-1]:null;
             const avgDiff = prevQ ? q.avg - prevQ.avg : null;
-            return \`<tr>
+            return `<tr>
               <td style="font-weight:600">${q.label}</td>
               <td class="blue" style="font-weight:700">${q.avg}</td>
               <td class="purple" style="font-weight:700">${q.median}</td>
@@ -927,7 +927,7 @@ function renderQSummary() {
               <td class="orange">${q.feedPrice?.toLocaleString()||'—'}</td>
               <td>${q.feedChange!=null?(q.feedChange>=0?'<span class="up">+':'<span class="down">')+q.feedChange.toLocaleString()+'</span>':'—'}</td>
               <td class="green">${q.fxAvg||'—'}</td>
-            </tr>\`;
+            </tr>`;
           }).join('')}
         </tbody>
       </table>
@@ -937,14 +937,14 @@ function renderQSummary() {
     <div class="card">
       <h2>飼料価格 改定履歴</h2>
       <p class="sub" style="margin-bottom:12px;"></p>
-      ${qData.filter(q=>q.notes).map(q=>\`
+      ${qData.filter(q=>q.notes).map(q=>`
         <div class="ai-insight ${q.feedChange>0?'alert':q.feedChange<0?'ok':''}">
           <strong>${q.label}（${q.year}年${q.quarter}）</strong>
           飼料: ${q.feedPrice?.toLocaleString()}円/t
           ${q.feedChange!=null?'　前期比: '+(q.feedChange>=0?'<span class="up">+':'<span class="down">')+q.feedChange.toLocaleString()+'</span>円':''}
           <br><span style="color:#6b7280;font-size:.78rem">${q.notes}</span>
         </div>
-      \`).join('')}
+      `).join('')}
     </div>
   `;
 
@@ -1019,7 +1019,7 @@ function renderQSummary() {
         legend: { labels: { color: '#374151', font: { size: 11 }, padding: 14 } },
         tooltip: {
           callbacks: {
-            label: ctx => \` \${ctx.dataset.label}: \${ctx.parsed.y}円/kg\`
+            label: ctx => ` \${ctx.dataset.label}: \${ctx.parsed.y}円/kg`
           }
         }
       },
