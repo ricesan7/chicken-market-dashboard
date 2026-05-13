@@ -819,12 +819,31 @@ function renderQSummary() {
   const monthly = MONTHLY.filter(m=>m.marketPrice!=null);
   const quarterly = QUARTERLY;
 
-  // 月次データを四半期ごとに集計
+  // ── 日次データから月ごとの中値を計算 ──
+  const dayByMonth = {};
+  DAILY.forEach(day => {
+    if (day.marketPrice == null) return;
+    const ym = day.date ? day.date.slice(0,7).replace('-','/') : null;
+    if (!ym) return;
+    if (!dayByMonth[ym]) dayByMonth[ym] = [];
+    dayByMonth[ym].push(day.marketPrice);
+  });
+  const monthlyMedianMap = {};
+  Object.keys(dayByMonth).forEach(ym => {
+    const sorted = [...dayByMonth[ym]].sort((a,b)=>a-b);
+    const n = sorted.length;
+    monthlyMedianMap[ym] = n % 2 === 0
+      ? Math.round((sorted[n/2-1] + sorted[n/2]) / 2)
+      : sorted[Math.floor(n/2)];
+  });
+
+  // ── 月次データを四半期ごとに集計 ──
   const qMap = {};
   monthly.forEach(m => {
-    const key = m.yearMonth.slice(0,4) + '-' + m.quarter; // e.g. "2025-Q2"
-    if (!qMap[key]) qMap[key] = { year: m.yearMonth.slice(0,4), quarter: m.quarter, prices: [], usdjpys: [], feedPrice: null };
+    const key = m.yearMonth.slice(0,4) + '-' + m.quarter;
+    if (!qMap[key]) qMap[key] = { year: m.yearMonth.slice(0,4), quarter: m.quarter, prices: [], dailyMedians: [], usdjpys: [], feedPrice: null };
     qMap[key].prices.push(m.marketPrice);
+    if (monthlyMedianMap[m.yearMonth] != null) qMap[key].dailyMedians.push({ ym: m.yearMonth, val: monthlyMedianMap[m.yearMonth] });
     if (m.usdjpy) qMap[key].usdjpys.push(m.usdjpy);
     if (m.feedPrice && !qMap[key].feedPrice) qMap[key].feedPrice = m.feedPrice;
   });
@@ -833,19 +852,22 @@ function renderQSummary() {
   const qData = qKeys.map(k => {
     const q = qMap[k];
     const sorted = [...q.prices].sort((a,b)=>a-b);
-    const median = sorted.length % 2 === 0
-      ? Math.round((sorted[sorted.length/2-1] + sorted[sorted.length/2]) / 2)
-      : sorted[Math.floor(sorted.length/2)];
-    const avg = Math.round(q.prices.reduce((s,v)=>s+v,0) / q.prices.length);
+    const n = sorted.length;
+    const avg = Math.round(q.prices.reduce((s,v)=>s+v,0) / n);
     const max = Math.max(...q.prices);
     const min = Math.min(...q.prices);
     const fxAvg = q.usdjpys.length ? (q.usdjpys.reduce((s,v)=>s+v,0)/q.usdjpys.length).toFixed(2) : null;
-    // quarerlyエンティティから飼料情報を取得
     const qInfo = quarterly.find(x => x.year===q.year && x.quarter===q.quarter);
+    // 日次中値の四半期平均（各月の日次中値の平均）
+    const dailyMedianAvg = q.dailyMedians.length
+      ? Math.round(q.dailyMedians.reduce((s,x)=>s+x.val,0) / q.dailyMedians.length)
+      : null;
     return {
       label: q.year.slice(2)+'/'+q.quarter,
       year: q.year, quarter: q.quarter,
-      avg, median, max, min,
+      avg, max, min,
+      dailyMedians: q.dailyMedians,   // 月ごとの日次中値一覧
+      dailyMedianAvg,                  // 四半期内の日次中値平均
       feedPrice: qInfo?.pricePerTon || q.feedPrice,
       feedChange: qInfo?.changeFromPrev,
       fxAvg, fxHigh: qInfo?.usdjpyHigh, fxLow: qInfo?.usdjpyLow,
@@ -854,14 +876,15 @@ function renderQSummary() {
     };
   });
 
-  const allMedian = (() => {
-    const all = qData.map(q=>q.median).sort((a,b)=>a-b);
-    return all.length%2===0 ? Math.round((all[all.length/2-1]+all[all.length/2])/2) : all[Math.floor(all.length/2)];
+  const allMedianAvg = (() => {
+    const vals = qData.map(q=>q.dailyMedianAvg).filter(v=>v!=null);
+    if (!vals.length) return null;
+    return Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
   })();
 
   const labels = qData.map(q=>q.label);
   const avgs   = qData.map(q=>q.avg);
-  const medians= qData.map(q=>q.median);
+  const dMedians = qData.map(q=>q.dailyMedianAvg);
   const maxs   = qData.map(q=>q.max);
   const mins   = qData.map(q=>q.min);
 
@@ -874,12 +897,12 @@ function renderQSummary() {
         <div class="kpi-sub">集計対象</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">全期間 中値</div>
-        <div class="kpi-value purple">${allMedian}<small style="font-size:.9rem"> 円/kg</small></div>
-        <div class="kpi-sub">四半期中値のメディアン</div>
+        <div class="kpi-label">日次中値の全期間平均</div>
+        <div class="kpi-value purple">${allMedianAvg??'—'}<small style="font-size:.9rem"> 円/kg</small></div>
+        <div class="kpi-sub">月次日次中値の平均</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">最新四半期 平均</div>
+        <div class="kpi-label">最新四半期 月次平均</div>
         <div class="kpi-value blue">${qData[qData.length-1]?.avg}<small style="font-size:.9rem"> 円/kg</small></div>
         <div class="kpi-sub">${qData[qData.length-1]?.label} (${qData[qData.length-1]?.months}ヶ月)</div>
       </div>
@@ -893,37 +916,63 @@ function renderQSummary() {
     <!-- 四半期推移グラフ -->
     <div class="card">
       <h2>四半期 MarketPrice 推移</h2>
-      <p class="sub">平均・中値・最高・最安を四半期ごとに表示</p>
+      <p class="sub">月次平均（青）と日次中値平均（紫破線）を四半期ごとに比較</p>
       <div class="chart-wrap" style="height:300px"><canvas id="chart-qbar"></canvas></div>
+    </div>
+
+    <!-- 月次 日次中値テーブル -->
+    <div class="card" style="overflow-x:auto;">
+      <h2>月ごとの 日次中値</h2>
+      <p class="sub" style="margin-bottom:12px;">各月の営業日データから算出した中央値</p>
+      <table>
+        <thead><tr>
+          <th style="text-align:left">四半期</th>
+          <th style="text-align:left">月</th>
+          <th class="purple">日次中値</th>
+          <th class="blue">月次平均</th>
+          <th>差（中値−平均）</th>
+        </tr></thead>
+        <tbody>
+          ${qData.map(q => {
+            return q.dailyMedians.map(dm => {
+              const mData = monthly.find(m=>m.yearMonth===dm.ym);
+              const mAvg = mData?.marketPrice ?? '—';
+              const diff = (typeof mAvg==='number') ? dm.val - mAvg : null;
+              return `<tr>
+                <td style="color:#9ca3af">${q.label}</td>
+                <td style="font-weight:600">${dm.ym}</td>
+                <td class="purple" style="font-weight:700">${dm.val}</td>
+                <td class="blue">${mAvg}</td>
+                <td>${diff!=null?(diff>0?'<span class="up">+':'<span class="down">')+diff+'</span>':'—'}</td>
+              </tr>`;
+            }).join('');
+          }).join('')}
+        </tbody>
+      </table>
     </div>
 
     <!-- 四半期テーブル -->
     <div class="card" style="overflow-x:auto;">
       <h2>四半期 詳細データ</h2>
-      <p class="sub" style="margin-bottom:12px;"></p>
       <table>
         <thead><tr>
           <th style="text-align:left">期</th>
-          <th class="blue">平均</th>
-          <th class="purple">中値</th>
+          <th class="blue">月次平均</th>
+          <th class="purple">日次中値平均</th>
           <th>最高</th>
           <th>最安</th>
-          <th>レンジ</th>
           <th class="orange">飼料(円/t)</th>
           <th>飼料前期比</th>
           <th class="green">USD/JPY</th>
         </tr></thead>
         <tbody>
           ${qData.map((q,i) => {
-            const prevQ = i>0?qData[i-1]:null;
-            const avgDiff = prevQ ? q.avg - prevQ.avg : null;
             return `<tr>
               <td style="font-weight:600">${q.label}</td>
               <td class="blue" style="font-weight:700">${q.avg}</td>
-              <td class="purple" style="font-weight:700">${q.median}</td>
+              <td class="purple" style="font-weight:700">${q.dailyMedianAvg??'—'}</td>
               <td class="up">${q.max}</td>
               <td class="down">${q.min}</td>
-              <td style="color:#6b7280">${q.min}〜${q.max}</td>
               <td class="orange">${q.feedPrice?.toLocaleString()||'—'}</td>
               <td>${q.feedChange!=null?(q.feedChange>=0?'<span class="up">+':'<span class="down">')+q.feedChange.toLocaleString()+'</span>':'—'}</td>
               <td class="green">${q.fxAvg||'—'}</td>
@@ -936,7 +985,6 @@ function renderQSummary() {
     <!-- 飼料価格変動メモ -->
     <div class="card">
       <h2>飼料価格 改定履歴</h2>
-      <p class="sub" style="margin-bottom:12px;"></p>
       ${qData.filter(q=>q.notes).map(q=>`
         <div class="ai-insight ${q.feedChange>0?'alert':q.feedChange<0?'ok':''}">
           <strong>${q.label}（${q.year}年${q.quarter}）</strong>
@@ -956,7 +1004,7 @@ function renderQSummary() {
       datasets: [
         {
           type: 'line',
-          label: '四半期平均',
+          label: '月次平均',
           data: avgs,
           borderColor: '#2563eb',
           backgroundColor: 'rgba(37,99,235,0.12)',
@@ -969,8 +1017,8 @@ function renderQSummary() {
         },
         {
           type: 'line',
-          label: '四半期中値',
-          data: medians,
+          label: '日次中値平均',
+          data: dMedians,
           borderColor: '#7c3aed',
           backgroundColor: 'transparent',
           borderWidth: 2,
@@ -990,7 +1038,6 @@ function renderQSummary() {
           borderWidth: 1.5,
           borderDash: [3,3],
           pointRadius: 3,
-          pointStyle: 'triangle',
           fill: false,
           tension: 0,
           order: 3,
@@ -1004,7 +1051,6 @@ function renderQSummary() {
           borderWidth: 1.5,
           borderDash: [3,3],
           pointRadius: 3,
-          pointStyle: 'triangle',
           fill: false,
           tension: 0,
           order: 4,
@@ -1019,7 +1065,7 @@ function renderQSummary() {
         legend: { labels: { color: '#374151', font: { size: 11 }, padding: 14 } },
         tooltip: {
           callbacks: {
-            label: ctx => ` \${ctx.dataset.label}: \${ctx.parsed.y}円/kg`
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}円/kg`
           }
         }
       },
