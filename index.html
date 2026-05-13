@@ -284,7 +284,7 @@
         
         async function loadData() {
             try {
-                const response = await fetch('https://api.base44.com/function/getMarketDataPublic');
+                const response = await fetch('https://ricesan7.github.io/chicken-market-dashboard/data.json?_=' + Date.now());
                 const result = await response.json();
                 
                 if (!result.ok) throw new Error(result.error || 'データ読み込みエラー');
