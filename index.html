@@ -85,6 +85,7 @@
   <button class="tab" onclick="showTab('monthly')">📈 月次推移</button>
   <button class="tab" onclick="showTab('quarterly')">🌾 飼料×為替</button>
   <button class="tab" onclick="showTab('ai')">🤖 AI分析</button>
+  <button class="tab" onclick="showTab('qsummary')">📊 四半期</button>
 </div>
 
 <div class="content">
@@ -148,13 +149,18 @@
   <div class="panel" id="panel-ai">
     <div id="ai-content"><p style="color:#9ca3af;text-align:center;padding:40px;">データ読み込み中...</p></div>
   </div>
+
+  <!-- 四半期タブ -->
+  <div class="panel" id="panel-qsummary">
+    <div id="qsummary-content"><p style="color:#9ca3af;text-align:center;padding:40px;">データ読み込み中...</p></div>
+  </div>
 </div>
 
 <script>
 const DAY_JA = {Mon:'月',Tue:'火',Wed:'水',Thu:'木',Fri:'金',Sat:'土',Sun:'日'};
 let DAILY=[], MONTHLY=[], QUARTERLY=[];
 let currentMonth='';
-let chartDailyMp=null, chartDailySub=null, chartMonthly=null, chartQuarterly=null, chartForecast=null;
+let chartDailyMp=null, chartDailySub=null, chartMonthly=null, chartQuarterly=null, chartForecast=null, chartQBar=null, chartQLine=null;
 
 // ── データ読み込み ──────────────────────────────
 async function loadData() {
@@ -173,6 +179,7 @@ async function loadData() {
     renderMonthly();
     renderQuarterly();
     renderAI();
+    renderQSummary();
   } catch(e) {
     document.getElementById('updated-at').textContent = '❌ データ読み込みエラー: '+e.message;
   }
@@ -801,6 +808,229 @@ function renderAI() {
         x: {
           grid: { display: false },
           ticks: { color: '#6b7280', font: { size: 11 } },
+        }
+      }
+    }
+  });
+}
+
+// ── 四半期サマリータブ ──────────────────────────
+function renderQSummary() {
+  const monthly = MONTHLY.filter(m=>m.marketPrice!=null);
+  const quarterly = QUARTERLY;
+
+  // 月次データを四半期ごとに集計
+  const qMap = {};
+  monthly.forEach(m => {
+    const key = m.yearMonth.slice(0,4) + '-' + m.quarter; // e.g. "2025-Q2"
+    if (!qMap[key]) qMap[key] = { year: m.yearMonth.slice(0,4), quarter: m.quarter, prices: [], usdjpys: [], feedPrice: null };
+    qMap[key].prices.push(m.marketPrice);
+    if (m.usdjpy) qMap[key].usdjpys.push(m.usdjpy);
+    if (m.feedPrice && !qMap[key].feedPrice) qMap[key].feedPrice = m.feedPrice;
+  });
+
+  const qKeys = Object.keys(qMap).sort();
+  const qData = qKeys.map(k => {
+    const q = qMap[k];
+    const sorted = [...q.prices].sort((a,b)=>a-b);
+    const median = sorted.length % 2 === 0
+      ? Math.round((sorted[sorted.length/2-1] + sorted[sorted.length/2]) / 2)
+      : sorted[Math.floor(sorted.length/2)];
+    const avg = Math.round(q.prices.reduce((s,v)=>s+v,0) / q.prices.length);
+    const max = Math.max(...q.prices);
+    const min = Math.min(...q.prices);
+    const fxAvg = q.usdjpys.length ? (q.usdjpys.reduce((s,v)=>s+v,0)/q.usdjpys.length).toFixed(2) : null;
+    // quarerlyエンティティから飼料情報を取得
+    const qInfo = quarterly.find(x => x.year===q.year && x.quarter===q.quarter);
+    return {
+      label: q.year.slice(2)+'/'+q.quarter,
+      year: q.year, quarter: q.quarter,
+      avg, median, max, min,
+      feedPrice: qInfo?.pricePerTon || q.feedPrice,
+      feedChange: qInfo?.changeFromPrev,
+      fxAvg, fxHigh: qInfo?.usdjpyHigh, fxLow: qInfo?.usdjpyLow,
+      notes: qInfo?.notes || '',
+      months: q.prices.length,
+    };
+  });
+
+  const allMedian = (() => {
+    const all = qData.map(q=>q.median).sort((a,b)=>a-b);
+    return all.length%2===0 ? Math.round((all[all.length/2-1]+all[all.length/2])/2) : all[Math.floor(all.length/2)];
+  })();
+
+  const labels = qData.map(q=>q.label);
+  const avgs   = qData.map(q=>q.avg);
+  const medians= qData.map(q=>q.median);
+  const maxs   = qData.map(q=>q.max);
+  const mins   = qData.map(q=>q.min);
+
+  document.getElementById('qsummary-content').innerHTML = `
+    <!-- KPIサマリー -->
+    <div class="kpi-grid" style="margin-bottom:16px;">
+      <div class="kpi">
+        <div class="kpi-label">四半期数</div>
+        <div class="kpi-value blue">${qData.length}<small style="font-size:.9rem"> 期</small></div>
+        <div class="kpi-sub">集計対象</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">全期間 中値</div>
+        <div class="kpi-value purple">${allMedian}<small style="font-size:.9rem"> 円/kg</small></div>
+        <div class="kpi-sub">四半期中値のメディアン</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">最新四半期 平均</div>
+        <div class="kpi-value blue">${qData[qData.length-1]?.avg}<small style="font-size:.9rem"> 円/kg</small></div>
+        <div class="kpi-sub">${qData[qData.length-1]?.label} (${qData[qData.length-1]?.months}ヶ月)</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">最新 飼料価格</div>
+        <div class="kpi-value orange">${qData[qData.length-1]?.feedPrice?.toLocaleString()||'—'}<small style="font-size:.75rem"> 円/t</small></div>
+        <div class="kpi-sub">${qData[qData.length-1]?.feedChange!=null?(qData[qData.length-1].feedChange>=0?'<span class="up">+':'<span class="down">')+qData[qData.length-1].feedChange.toLocaleString()+'</span>円':'—'}</div>
+      </div>
+    </div>
+
+    <!-- 四半期推移グラフ -->
+    <div class="card">
+      <h2>四半期 MarketPrice 推移</h2>
+      <p class="sub">平均・中値・最高・最安を四半期ごとに表示</p>
+      <div class="chart-wrap" style="height:300px"><canvas id="chart-qbar"></canvas></div>
+    </div>
+
+    <!-- 四半期テーブル -->
+    <div class="card" style="overflow-x:auto;">
+      <h2>四半期 詳細データ</h2>
+      <p class="sub" style="margin-bottom:12px;"></p>
+      <table>
+        <thead><tr>
+          <th style="text-align:left">期</th>
+          <th class="blue">平均</th>
+          <th class="purple">中値</th>
+          <th>最高</th>
+          <th>最安</th>
+          <th>レンジ</th>
+          <th class="orange">飼料(円/t)</th>
+          <th>飼料前期比</th>
+          <th class="green">USD/JPY</th>
+        </tr></thead>
+        <tbody>
+          ${qData.map((q,i) => {
+            const prevQ = i>0?qData[i-1]:null;
+            const avgDiff = prevQ ? q.avg - prevQ.avg : null;
+            return \`<tr>
+              <td style="font-weight:600">${q.label}</td>
+              <td class="blue" style="font-weight:700">${q.avg}</td>
+              <td class="purple" style="font-weight:700">${q.median}</td>
+              <td class="up">${q.max}</td>
+              <td class="down">${q.min}</td>
+              <td style="color:#6b7280">${q.min}〜${q.max}</td>
+              <td class="orange">${q.feedPrice?.toLocaleString()||'—'}</td>
+              <td>${q.feedChange!=null?(q.feedChange>=0?'<span class="up">+':'<span class="down">')+q.feedChange.toLocaleString()+'</span>':'—'}</td>
+              <td class="green">${q.fxAvg||'—'}</td>
+            </tr>\`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 飼料価格変動メモ -->
+    <div class="card">
+      <h2>飼料価格 改定履歴</h2>
+      <p class="sub" style="margin-bottom:12px;"></p>
+      ${qData.filter(q=>q.notes).map(q=>\`
+        <div class="ai-insight ${q.feedChange>0?'alert':q.feedChange<0?'ok':''}">
+          <strong>${q.label}（${q.year}年${q.quarter}）</strong>
+          飼料: ${q.feedPrice?.toLocaleString()}円/t
+          ${q.feedChange!=null?'　前期比: '+(q.feedChange>=0?'<span class="up">+':'<span class="down">')+q.feedChange.toLocaleString()+'</span>円':''}
+          <br><span style="color:#6b7280;font-size:.78rem">${q.notes}</span>
+        </div>
+      \`).join('')}
+    </div>
+  `;
+
+  // グラフ描画
+  if (chartQBar) chartQBar.destroy();
+  chartQBar = new Chart(document.getElementById('chart-qbar'), {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'line',
+          label: '四半期平均',
+          data: avgs,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37,99,235,0.12)',
+          borderWidth: 2.5,
+          pointRadius: 6,
+          pointBackgroundColor: '#2563eb',
+          fill: true,
+          tension: 0.3,
+          order: 1,
+        },
+        {
+          type: 'line',
+          label: '四半期中値',
+          data: medians,
+          borderColor: '#7c3aed',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5,4],
+          pointRadius: 5,
+          pointBackgroundColor: '#7c3aed',
+          fill: false,
+          tension: 0.3,
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: '最高値',
+          data: maxs,
+          borderColor: 'rgba(220,38,38,0.5)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [3,3],
+          pointRadius: 3,
+          pointStyle: 'triangle',
+          fill: false,
+          tension: 0,
+          order: 3,
+        },
+        {
+          type: 'line',
+          label: '最安値',
+          data: mins,
+          borderColor: 'rgba(22,163,74,0.5)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [3,3],
+          pointRadius: 3,
+          pointStyle: 'triangle',
+          fill: false,
+          tension: 0,
+          order: 4,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#374151', font: { size: 11 }, padding: 14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => \` \${ctx.dataset.label}: \${ctx.parsed.y}円/kg\`
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: { color: '#f3f4f6' },
+          ticks: { color: '#6b7280', font: { size: 11 }, callback: v => v+'円' },
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6b7280', font: { size: 11 } }
         }
       }
     }
