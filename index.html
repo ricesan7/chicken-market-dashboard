@@ -4,30 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🐔 鶏肉相場ダッシュボード</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.0/dist/Recharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/dist/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/dist/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background-color: #111827;
             color: #f3f4f6;
             padding: 20px;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { margin-bottom: 30px; border-bottom: 1px solid #374151; padding-bottom: 20px; }
-        h1 { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
-        .subtitle { font-size: 14px; color: #9ca3af; }
-        .last-updated { font-size: 12px; color: #6b7280; margin-top: 10px; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+        
+        .last-updated {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+        
         .tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 30px;
             border-bottom: 1px solid #374151;
             padding-bottom: 12px;
-            flex-wrap: wrap;
         }
+        
         .tab-btn {
-            padding: 10px 18px;
+            padding: 10px 20px;
             border: none;
             background: none;
             color: #9ca3af;
@@ -37,25 +69,59 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .tab-btn:hover { background-color: #1f2937; color: #f3f4f6; }
-        .tab-btn.active { background-color: #2563eb; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        
+        .tab-btn:hover {
+            background-color: #1f2937;
+            color: #f3f4f6;
+        }
+        
+        .tab-btn.active {
+            background-color: #2563eb;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 30px;
         }
+        
         .kpi-card {
             background: #1f2937;
             border: 1px solid #374151;
             border-radius: 12px;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        .kpi-label { font-size: 13px; color: #9ca3af; margin-bottom: 8px; }
-        .kpi-value { font-size: 28px; font-weight: bold; color: #60a5fa; }
-        .kpi-sub { font-size: 12px; color: #6b7280; margin-top: 6px; }
+        
+        .kpi-label {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+        
+        .kpi-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        
+        .kpi-sub {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
         .chart-container {
             background: #1f2937;
             border: 1px solid #374151;
@@ -63,36 +129,91 @@
             padding: 20px;
             margin-bottom: 20px;
         }
-        .chart-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-        .chart-desc { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
-        canvas { width: 100% !important; }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #f3f4f6;
+        }
+        
+        .chart-desc {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+        
+        .chart-placeholder {
+            height: 300px;
+            background: #111827;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
-        }
-        table thead { background: #111827; }
-        table th { padding: 12px; text-align: left; color: #9ca3af; font-weight: 500; }
-        table td { padding: 10px 12px; border-bottom: 1px solid #374151; }
-        table tbody tr:hover { background: #374151; }
-        table tbody tr:last-child td { border-bottom: none; }
-        .value-positive { color: #f87171; }
-        .value-negative { color: #4ade80; }
-        .value-highlight { color: #60a5fa; font-weight: bold; }
-        .value-secondary { color: #a78bfa; }
-        .table-wrapper {
             background: #1f2937;
             border: 1px solid #374151;
             border-radius: 12px;
             overflow: hidden;
-            margin-bottom: 20px;
+            font-size: 13px;
         }
-        .table-header {
-            padding: 16px 20px;
+        
+        table thead {
+            background: #111827;
             border-bottom: 1px solid #374151;
         }
-        .table-title { font-size: 15px; font-weight: 600; }
-        .loading { text-align: center; padding: 60px; color: #6b7280; font-size: 16px; }
+        
+        table th {
+            padding: 12px;
+            text-align: left;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        table tbody tr:hover {
+            background: #374151;
+        }
+        
+        table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .value-positive { color: #f87171; }
+        .value-negative { color: #4ade80; }
+        .value-highlight { color: #60a5fa; font-weight: bold; }
+        .value-secondary { color: #a78bfa; }
+        
+        @media (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 11px;
+            }
+            
+            table th, table td {
+                padding: 8px;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
         .error {
             background: #7f1d1d;
             border: 1px solid #dc2626;
@@ -101,857 +222,238 @@
             color: #fca5a5;
             margin-bottom: 20px;
         }
-        .q-label {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            background: #1e3a5f;
-            color: #60a5fa;
-        }
-
-        /* 相場レポートタブ専用 */
-        .negotiation-tab { background: linear-gradient(135deg, #1e3a5f, #1a2e4a); color: #60a5fa !important; border: 1px solid #2563eb; }
-        .negotiation-tab.active { background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: #fff !important; border: none; }
-        .neg-section { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-        .neg-section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .verdict-box { border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .verdict-high { background: #7f1d1d; border: 1px solid #dc2626; }
-        .verdict-mid { background: #78350f; border: 1px solid #d97706; }
-        .verdict-low { background: #14532d; border: 1px solid #16a34a; }
-        .verdict-label { font-size: 22px; font-weight: 800; }
-        .verdict-high .verdict-label { color: #f87171; }
-        .verdict-mid .verdict-label { color: #fbbf24; }
-        .verdict-low .verdict-label { color: #4ade80; }
-        .verdict-desc { font-size: 13px; color: #d1d5db; line-height: 1.6; max-width: 500px; }
-        .neg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .neg-card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 16px; }
-        .neg-card-label { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
-        .neg-card-value { font-size: 22px; font-weight: 700; }
-        .neg-card-sub { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-        .evidence-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .evidence-table th { padding: 10px 12px; text-align: left; color: #9ca3af; font-weight: 600; background: #111827; border-bottom: 1px solid #374151; }
-        .evidence-table td { padding: 10px 12px; border-bottom: 1px solid #2d3748; }
-        .evidence-table tr:last-child td { border-bottom: none; }
-        .evidence-table tr:hover td { background: #374151; }
-        .trend-arrow { font-size: 18px; }
-        .bullet-list { list-style: none; padding: 0; }
-        .bullet-list li { padding: 10px 0; border-bottom: 1px solid #374151; font-size: 13px; color: #d1d5db; line-height: 1.6; display: flex; gap: 10px; }
-        .bullet-list li:last-child { border-bottom: none; }
-        .bullet-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
-        .price-bar-wrap { margin: 8px 0; }
-        .price-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
-        .price-bar-track { background: #374151; border-radius: 4px; height: 10px; overflow: hidden; }
-        .price-bar-fill { height: 100%; border-radius: 4px; }
-        @media (max-width: 600px) {
-            .verdict-box { flex-direction: column; }
-            .neg-card-value { font-size: 18px; }
-        }
-        @media (max-width: 768px) {
-            h1 { font-size: 22px; }
-            .kpi-grid { grid-template-columns: 1fr; }
-            table { font-size: 11px; }
-            table th, table td { padding: 8px; }
-        }
     </style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <h1>🐔 鶏肉相場ダッシュボード</h1>
-        <p class="subtitle">東京市場 荷受相場 | 全国食鳥新聞社データ</p>
-        <p class="last-updated" id="lastUpdated">最終更新: 読み込み中...</p>
-    </header>
-
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('daily', this)">📅 日次相場</button>
-        <button class="tab-btn" onclick="switchTab('monthly', this)">📈 月次推移</button>
-        <button class="tab-btn" onclick="switchTab('quarterly', this)">📊 四半期推移</button>
-        <button class="tab-btn negotiation-tab" onclick="switchTab('negotiation', this)">📋 相場レポート</button>
-        <button class="tab-btn" onclick="switchTab('info', this)">ℹ️ 説明</button>
-    </div>
-
-    <div id="daily" class="tab-content active">
-        <div class="loading">⏳ データを読み込み中...</div>
-    </div>
-
-    <div id="monthly" class="tab-content">
-        <div class="loading">⏳ データを読み込み中...</div>
-    </div>
-
-    <div id="quarterly" class="tab-content">
-        <div class="loading">⏳ データを読み込み中...</div>
-    </div>
-
-    <div id="info" class="tab-content">
-        <div class="kpi-card" style="max-width: 620px;">
-            <h3 style="margin-bottom: 12px; font-size: 16px;">📊 このダッシュボードについて</h3>
-            <ul style="line-height: 2; color: #d1d5db; padding-left: 16px;">
-                <li><strong>データ源</strong>: 全国食鳥新聞社（日本経済新聞掲載 荷受相場）</li>
-                <li><strong>更新頻度</strong>: 毎日 8:30 JST 自動更新</li>
-                <li><strong>市場価格計算式</strong>: (もも加重×0.55 + むね加重×0.45) × 0.32</li>
-                <li><strong>用途</strong>: 鶏肉市場価格と飼料コストの相関分析</li>
-            </ul>
-            <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 16px;">📌 重要な指標</h3>
-            <ul style="line-height: 2; color: #d1d5db; padding-left: 16px;">
-                <li><strong>市場価格</strong>: 鶏肉の実売価格目安（円/kg）</li>
-                <li><strong>もも加重</strong>: もも肉の加重平均価格</li>
-                <li><strong>むね加重</strong>: むね肉の加重平均価格</li>
-                <li><strong>四半期MarketPrice</strong>: 各四半期の月次MarketPrice平均</li>
-            </ul>
-            <p style="margin-top: 20px; color: #9ca3af; font-size: 12px;">
-                ※ 30分ごとに自動リロードされます。
-            </p>
+    <div class="container">
+        <header>
+            <h1>🐔 鶏肉相場ダッシュボード</h1>
+            <p class="subtitle">東京市場 荷受相場 | 全国食鳥新聞社データ</p>
+            <p class="last-updated" id="lastUpdated">最終更新: —</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('daily')">📅 日次相場</button>
+            <button class="tab-btn" onclick="switchTab('monthly')">📈 月次推移</button>
+            <button class="tab-btn" onclick="switchTab('info')">ℹ️ 説明</button>
+        </div>
+        
+        <!-- 日次タブ -->
+        <div id="daily" class="tab-content active">
+            <div id="daily-content">
+                <div class="loading">⏳ データを読み込み中...</div>
+            </div>
+        </div>
+        
+        <!-- 月次タブ -->
+        <div id="monthly" class="tab-content">
+            <div id="monthly-content">
+                <div class="loading">⏳ データを読み込み中...</div>
+            </div>
+        </div>
+        
+        <!-- 説明タブ -->
+        <div id="info" class="tab-content">
+            <div class="kpi-card" style="max-width: 600px;">
+                <h3 style="margin-bottom: 12px; font-size: 16px;">📊 このダッシュボードについて</h3>
+                <ul style="line-height: 1.8; color: #d1d5db; list-position: inside;">
+                    <li><strong>データ源</strong>: 全国食鳥新聞社（日本経済新聞掲載 荷受相場）</li>
+                    <li><strong>更新頻度</strong>: 毎日 7:00 JST 自動更新</li>
+                    <li><strong>市場価格計算式</strong>: (もも加重×0.55 + むね加重×0.45) × 0.32</li>
+                    <li><strong>用途</strong>: 鶏肉市場価格と飼料コストの相関分析</li>
+                </ul>
+                
+                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 16px;">📌 重要な指標</h3>
+                <ul style="line-height: 1.8; color: #d1d5db; list-position: inside;">
+                    <li><strong>市場価格</strong>: 鶏肉の実売価格目安（円/kg）</li>
+                    <li><strong>もも加重</strong>: もも肉の加重平均価格</li>
+                    <li><strong>むね加重</strong>: むね肉の加重平均価格</li>
+                    <li><strong>為替（USD/JPY）</strong>: 飼料輸入価格に影響</li>
+                </ul>
+                
+                <p style="margin-top: 24px; color: #9ca3af; font-size: 12px;">
+                    ※このダッシュボードは自動更新されます。30分ごとにページを再読み込みしてください。
+                </p>
+            </div>
         </div>
     </div>
-</div>
-
-    <div id="negotiation" class="tab-content">
-        <div class="loading">⏳ データを読み込み中...</div>
-    </div>
-
-<script>
-const DAY_MAP = { 'Mon': '月', 'Tue': '火', 'Wed': '水', 'Thu': '木', 'Fri': '金', 'Sat': '土', 'Sun': '日' };
-
-let allData = null;
-let chartInstances = {};
-
-function destroyChart(id) {
-    if (chartInstances[id]) {
-        chartInstances[id].destroy();
-        delete chartInstances[id];
-    }
-}
-
-async function loadData() {
-    try {
-        const res = await fetch('https://api.base44.com/function/getMarketDataPublic');
-        allData = await res.json();
-        if (!allData.ok) throw new Error(allData.error || 'APIエラー');
-
-        renderDaily();
-        renderMonthly();
-        renderQuarterly();
-        renderNegotiation();
-
-        const d = new Date(allData.fetchedAt);
-        document.getElementById('lastUpdated').textContent = `最終更新: ${d.toLocaleString('ja-JP')}`;
-    } catch (err) {
-        document.querySelectorAll('.tab-content').forEach(el => {
-            el.innerHTML = `<div class="error">❌ データ読み込み失敗: ${err.message}</div>`;
-        });
-    }
-}
-
-/* ========== 日次タブ ========== */
-function renderDaily() {
-    const daily = (allData.daily || []).sort((a, b) => a.date.localeCompare(b.date));
-    const months = [...new Set(daily.map(d => d.yearMonth))].sort().reverse();
-    const currentMonth = months[0];
-    const filtered = daily.filter(d => d.yearMonth === currentMonth);
-
-    if (!filtered.length) {
-        document.getElementById('daily').innerHTML = '<div class="error">日次データなし</div>';
-        return;
-    }
-
-    const latest = filtered[filtered.length - 1];
-    const prev = filtered[filtered.length - 2];
-    const mpDiff = (latest.marketPrice != null && prev?.marketPrice != null)
-        ? (latest.marketPrice - prev.marketPrice).toFixed(2) : null;
-    const validPrices = filtered.filter(d => d.marketPrice != null);
-    const monthAvg = validPrices.length
-        ? (validPrices.reduce((s, d) => s + d.marketPrice, 0) / validPrices.length).toFixed(2) : null;
-
-    let html = `
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-label">🐔 最新 市場価格 (${latest.date})</div>
-            <div class="kpi-value">${latest.marketPrice?.toFixed(2) ?? '—'} <span style="font-size:16px;color:#9ca3af;">円/kg</span></div>
-            <div class="kpi-sub">前日比 ${mpDiff != null ? (parseFloat(mpDiff) > 0 ? '<span class="value-positive">+' + mpDiff + '</span>' : '<span class="value-negative">' + mpDiff + '</span>') : '—'}円</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">もも加重 / むね加重</div>
-            <div class="kpi-value" style="font-size:22px;">${latest.momoWeighted ?? '—'} / ${latest.muneWeighted ?? '—'}</div>
-            <div class="kpi-sub">${DAY_MAP[latest.dayOfWeek] ?? latest.dayOfWeek}曜日</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">📊 ${currentMonth} 月間平均</div>
-            <div class="kpi-value">${monthAvg ?? '—'} <span style="font-size:16px;color:#9ca3af;">円/kg</span></div>
-            <div class="kpi-sub">${validPrices.length}営業日分</div>
-        </div>
-    </div>
-    <div class="chart-container">
-        <div class="chart-title">${currentMonth} 日次 市場価格チャート</div>
-        <div class="chart-desc">計算式: (もも加重×0.55 + むね加重×0.45) × 0.32</div>
-        <canvas id="dailyChart" height="120"></canvas>
-    </div>
-    <div class="table-wrapper">
-        <div class="table-header"><span class="table-title">📋 ${currentMonth} 日次データ</span></div>
-        <table>
-            <thead><tr>
-                <th>日付</th><th>曜</th>
-                <th style="color:#60a5fa;">市場価格</th>
-                <th style="color:#a78bfa;">もも加重</th>
-                <th style="color:#34d399;">むね加重</th>
-                <th>もも量(t)</th><th>むね量(t)</th>
-            </tr></thead>
-            <tbody>
-    `;
-    [...filtered].reverse().forEach(row => {
-        html += `<tr>
-            <td>${row.date}</td>
-            <td>${DAY_MAP[row.dayOfWeek] ?? row.dayOfWeek}</td>
-            <td class="value-highlight">${row.marketPrice?.toFixed(2) ?? '—'}</td>
-            <td class="value-secondary">${row.momoWeighted ?? '—'}</td>
-            <td style="color:#34d399;">${row.muneWeighted ?? '—'}</td>
-            <td>${row.momoVolume ?? '—'}</td>
-            <td>${row.muneVolume ?? '—'}</td>
-        </tr>`;
-    });
-    html += '</tbody></table></div>';
-    document.getElementById('daily').innerHTML = html;
-
-    const labels = filtered.map(d => d.date.slice(5));
-    const prices = filtered.map(d => d.marketPrice);
-    destroyChart('dailyChart');
-    chartInstances['dailyChart'] = new Chart(document.getElementById('dailyChart'), {
-        type: 'line',
-        data: {
-            labels,
-            datasets: [{
-                label: '市場価格 (円/kg)',
-                data: prices,
-                borderColor: '#60a5fa',
-                backgroundColor: 'rgba(96,165,250,0.1)',
-                borderWidth: 2,
-                pointRadius: 4,
-                tension: 0.3,
-                fill: true,
-                spanGaps: true,
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { labels: { color: '#9ca3af' } },
-                tooltip: { callbacks: { label: ctx => `${ctx.parsed.y?.toFixed(2)} 円/kg` } }
-            },
-            scales: {
-                x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+    
+    <script>
+        const DAY_MAP = { 'Mon': '月', 'Tue': '火', 'Wed': '水', 'Thu': '木', 'Fri': '金', 'Sat': '土', 'Sun': '日' };
+        let dailyData = [];
+        
+        async function loadData() {
+            try {
+                const response = await fetch('https://api.base44.com/function/getMarketDataPublic');
+                const result = await response.json();
+                
+                if (!result.ok) throw new Error(result.error || 'データ読み込みエラー');
+                
+                dailyData = result.daily || [];
+                renderDaily();
+                renderMonthly();
+                
+                const date = new Date(result.fetchedAt);
+                document.getElementById('lastUpdated').textContent = 
+                    `最終更新: ${date.toLocaleString('ja-JP')}`;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('daily-content').innerHTML = 
+                    `<div class="error">❌ データの読み込みに失敗しました: ${error.message}</div>`;
             }
         }
-    });
-}
-
-/* ========== 月次タブ ========== */
-function renderMonthly() {
-    const monthly = (allData.monthly || [])
-        .filter(d => d.marketPrice != null)
-        .sort((a, b) => a.yearMonth.localeCompare(b.yearMonth));
-
-    if (!monthly.length) {
-        document.getElementById('monthly').innerHTML = '<div class="error">月次データなし</div>';
-        return;
-    }
-
-    const html = `
-    <div class="chart-container">
-        <div class="chart-title">月次 市場価格推移</div>
-        <div class="chart-desc">各月のMarketPrice（円/kg）と配合飼料価格（円/t）の推移</div>
-        <canvas id="monthlyChart" height="100"></canvas>
-    </div>
-    <div class="table-wrapper">
-        <div class="table-header"><span class="table-title">📋 月別データ一覧</span></div>
-        <table>
-            <thead><tr>
-                <th>年月</th>
-                <th>四半期</th>
-                <th style="color:#60a5fa;">市場価格</th>
-                <th style="color:#fb923c;">配合飼料</th>
-                <th style="color:#34d399;">飼料増減</th>
-                <th style="color:#f472b6;">USD/JPY</th>
-            </tr></thead>
-            <tbody>
-                ${[...monthly].reverse().map(row => `
-                <tr>
-                    <td>${row.yearMonth}</td>
-                    <td><span class="q-label">${row.quarter ?? '—'}</span></td>
-                    <td class="value-highlight">${row.marketPrice?.toFixed(2) ?? '—'}</td>
-                    <td style="color:#fb923c;">${row.feedPrice?.toLocaleString() ?? '—'}</td>
-                    <td>${row.feedChange != null
-                        ? `<span class="${row.feedChange > 0 ? 'value-positive' : 'value-negative'}">${row.feedChange > 0 ? '+' : ''}${row.feedChange?.toLocaleString()}</span>`
-                        : '—'}</td>
-                    <td style="color:#f472b6;">${row.usdjpy ?? '—'}</td>
-                </tr>`).join('')}
-            </tbody>
-        </table>
-    </div>`;
-    document.getElementById('monthly').innerHTML = html;
-
-    const labels = monthly.map(d => d.yearMonth);
-    const prices = monthly.map(d => d.marketPrice);
-    const feeds = monthly.map(d => d.feedPrice ? d.feedPrice / 100 : null);
-
-    destroyChart('monthlyChart');
-    chartInstances['monthlyChart'] = new Chart(document.getElementById('monthlyChart'), {
-        type: 'line',
-        data: {
-            labels,
-            datasets: [
-                {
-                    label: '市場価格 (円/kg)',
-                    data: prices,
-                    borderColor: '#60a5fa',
-                    backgroundColor: 'rgba(96,165,250,0.1)',
-                    borderWidth: 2.5,
-                    pointRadius: 5,
-                    tension: 0.3,
-                    fill: true,
-                    yAxisID: 'y',
-                },
-                {
-                    label: '配合飼料 (÷100, 円/t)',
-                    data: feeds,
-                    borderColor: '#fb923c',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    pointRadius: 4,
-                    tension: 0.3,
-                    fill: false,
-                    yAxisID: 'y2',
-                    spanGaps: true,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { labels: { color: '#d1d5db' } },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            if (ctx.datasetIndex === 0) return `市場価格: ${ctx.parsed.y?.toFixed(2)} 円/kg`;
-                            return `配合飼料: ${(ctx.parsed.y * 100)?.toLocaleString()} 円/t`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { ticks: { color: '#9ca3af', maxRotation: 45 }, grid: { color: '#374151' } },
-                y: {
-                    type: 'linear', position: 'left',
-                    ticks: { color: '#60a5fa' }, grid: { color: '#374151' },
-                    title: { display: true, text: '市場価格 (円/kg)', color: '#60a5fa' }
-                },
-                y2: {
-                    type: 'linear', position: 'right',
-                    ticks: { color: '#fb923c' }, grid: { drawOnChartArea: false },
-                    title: { display: true, text: '配合飼料÷100 (円/t)', color: '#fb923c' }
-                }
-            }
-        }
-    });
-}
-
-/* ========== 四半期タブ ========== */
-function renderQuarterly() {
-    const monthly = (allData.monthly || [])
-        .filter(d => d.marketPrice != null)
-        .sort((a, b) => a.yearMonth.localeCompare(b.yearMonth));
-
-    if (!monthly.length) {
-        document.getElementById('quarterly').innerHTML = '<div class="error">データなし</div>';
-        return;
-    }
-
-    const qMap = {};
-    monthly.forEach(d => {
-        const year = d.yearMonth.split('/')[0];
-        const quarter = d.quarter || getQuarter(d.yearMonth);
-        const key = `${year}-${quarter}`;
-        if (!qMap[key]) qMap[key] = { label: `${year} ${quarter}`, prices: [], feedPrices: [], usdjpys: [] };
-        qMap[key].prices.push(d.marketPrice);
-        if (d.feedPrice) qMap[key].feedPrices.push(d.feedPrice);
-        if (d.usdjpy) qMap[key].usdjpys.push(d.usdjpy);
-    });
-
-    const quarters = Object.entries(qMap)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([key, v]) => ({
-            key,
-            label: v.label,
-            avgMarket: avg(v.prices),
-            avgFeed: avg(v.feedPrices),
-            avgUsdjpy: avg(v.usdjpys),
-            count: v.prices.length,
-        }));
-
-    quarters.forEach((q, i) => {
-        q.marketDiff = i > 0 ? (q.avgMarket - quarters[i - 1].avgMarket) : null;
-    });
-
-    const latest = quarters[quarters.length - 1];
-    const prev = quarters[quarters.length - 2];
-
-    const html = `
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-label">📊 最新四半期 平均市場価格 (${latest.label})</div>
-            <div class="kpi-value">${latest.avgMarket?.toFixed(2)} <span style="font-size:16px;color:#9ca3af;">円/kg</span></div>
-            <div class="kpi-sub">前四半期比 ${latest.marketDiff != null
-                ? (latest.marketDiff > 0
-                    ? `<span class="value-positive">+${latest.marketDiff.toFixed(2)}</span>`
-                    : `<span class="value-negative">${latest.marketDiff.toFixed(2)}</span>`)
-                : '—'}円/kg</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">🌾 最新四半期 配合飼料価格 (${latest.label})</div>
-            <div class="kpi-value" style="font-size:22px;">${latest.avgFeed?.toLocaleString(undefined, {maximumFractionDigits:0}) ?? '—'} <span style="font-size:14px;color:#9ca3af;">円/t</span></div>
-            <div class="kpi-sub">前四半期: ${prev?.avgFeed?.toLocaleString(undefined, {maximumFractionDigits:0}) ?? '—'} 円/t</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">💱 最新四半期 平均為替 (${latest.label})</div>
-            <div class="kpi-value" style="font-size:22px;">${latest.avgUsdjpy?.toFixed(2) ?? '—'} <span style="font-size:14px;color:#9ca3af;">円/USD</span></div>
-            <div class="kpi-sub">前四半期: ${prev?.avgUsdjpy?.toFixed(2) ?? '—'} 円/USD</div>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <div class="chart-title">四半期別 市場価格推移（棒グラフ + 配合飼料折れ線）</div>
-        <div class="chart-desc">月次MarketPriceの四半期平均（棒）＋ 配合飼料価格÷100（オレンジ折れ線）を重ね表示。青＝前Q比上昇、緑＝下降</div>
-        <canvas id="quarterlyBarChart" height="110"></canvas>
-    </div>
-
-    <div class="chart-container">
-        <div class="chart-title">四半期別 市場価格折れ線 ＋ 前四半期比</div>
-        <div class="chart-desc">価格水準の変化トレンドと、前四半期との差分（赤＝上昇、緑＝下降）</div>
-        <canvas id="quarterlyLineChart" height="110"></canvas>
-    </div>
-
-    <div class="table-wrapper">
-        <div class="table-header"><span class="table-title">📋 四半期別データ一覧</span></div>
-        <table>
-            <thead><tr>
-                <th>四半期</th>
-                <th style="color:#60a5fa;">平均市場価格</th>
-                <th style="color:#34d399;">前Q比</th>
-                <th style="color:#fb923c;">配合飼料</th>
-                <th style="color:#f472b6;">平均USD/JPY</th>
-                <th>月数</th>
-            </tr></thead>
-            <tbody>
-                ${[...quarters].reverse().map(q => `
-                <tr>
-                    <td><span class="q-label">${q.label}</span></td>
-                    <td class="value-highlight">${q.avgMarket?.toFixed(2) ?? '—'} 円/kg</td>
-                    <td>${q.marketDiff != null
-                        ? `<span class="${q.marketDiff > 0 ? 'value-positive' : 'value-negative'}">${q.marketDiff > 0 ? '+' : ''}${q.marketDiff.toFixed(2)}</span>`
-                        : '—'}</td>
-                    <td style="color:#fb923c;">${q.avgFeed?.toLocaleString(undefined, {maximumFractionDigits:0}) ?? '—'} 円/t</td>
-                    <td style="color:#f472b6;">${q.avgUsdjpy?.toFixed(2) ?? '—'}</td>
-                    <td>${q.count}ヶ月</td>
-                </tr>`).join('')}
-            </tbody>
-        </table>
-    </div>`;
-
-    document.getElementById('quarterly').innerHTML = html;
-
-    const qLabels = quarters.map(q => q.label);
-    const qPrices = quarters.map(q => q.avgMarket);
-    const qFeeds = quarters.map(q => q.avgFeed ? q.avgFeed / 100 : null);
-    const qDiffs = quarters.map(q => q.marketDiff);
-
-    destroyChart('quarterlyBarChart');
-    chartInstances['quarterlyBarChart'] = new Chart(document.getElementById('quarterlyBarChart'), {
-        data: {
-            labels: qLabels,
-            datasets: [
-                {
-                    type: 'bar',
-                    label: '四半期平均 市場価格 (円/kg)',
-                    data: qPrices,
-                    backgroundColor: qPrices.map((v, i) => {
-                        if (i === 0) return 'rgba(96,165,250,0.7)';
-                        return v > qPrices[i-1] ? 'rgba(248,113,113,0.7)' : 'rgba(74,222,128,0.7)';
-                    }),
-                    borderColor: qPrices.map((v, i) => {
-                        if (i === 0) return '#60a5fa';
-                        return v > qPrices[i-1] ? '#f87171' : '#4ade80';
-                    }),
-                    borderWidth: 1.5,
-                    yAxisID: 'y',
-                },
-                {
-                    type: 'line',
-                    label: '配合飼料 (÷100, 円/t)',
-                    data: qFeeds,
-                    borderColor: '#fb923c',
-                    borderWidth: 2.5,
-                    pointRadius: 5,
-                    tension: 0.3,
-                    fill: false,
-                    yAxisID: 'y2',
-                    spanGaps: true,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { labels: { color: '#d1d5db' } },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            if (ctx.datasetIndex === 0) return `市場価格: ${ctx.parsed.y?.toFixed(2)} 円/kg`;
-                            return `配合飼料: ${(ctx.parsed.y * 100)?.toLocaleString()} 円/t`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                y: {
-                    type: 'linear', position: 'left',
-                    ticks: { color: '#60a5fa' }, grid: { color: '#374151' },
-                    title: { display: true, text: '市場価格 (円/kg)', color: '#60a5fa' }
-                },
-                y2: {
-                    type: 'linear', position: 'right',
-                    ticks: { color: '#fb923c' }, grid: { drawOnChartArea: false },
-                    title: { display: true, text: '配合飼料÷100', color: '#fb923c' }
-                }
-            }
-        }
-    });
-
-    destroyChart('quarterlyLineChart');
-    chartInstances['quarterlyLineChart'] = new Chart(document.getElementById('quarterlyLineChart'), {
-        data: {
-            labels: qLabels,
-            datasets: [
-                {
-                    type: 'line',
-                    label: '四半期平均 市場価格 (円/kg)',
-                    data: qPrices,
-                    borderColor: '#60a5fa',
-                    backgroundColor: 'rgba(96,165,250,0.15)',
-                    borderWidth: 2.5,
-                    pointRadius: 5,
-                    tension: 0.3,
-                    fill: true,
-                    yAxisID: 'y',
-                },
-                {
-                    type: 'bar',
-                    label: '前四半期比 (円/kg)',
-                    data: qDiffs,
-                    backgroundColor: qDiffs.map(v =>
-                        v == null ? 'transparent' : v > 0 ? 'rgba(248,113,113,0.5)' : 'rgba(74,222,128,0.5)'
-                    ),
-                    borderColor: qDiffs.map(v =>
-                        v == null ? 'transparent' : v > 0 ? '#f87171' : '#4ade80'
-                    ),
-                    borderWidth: 1,
-                    yAxisID: 'y2',
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { labels: { color: '#d1d5db' } },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            if (ctx.datasetIndex === 0) return `市場価格: ${ctx.parsed.y?.toFixed(2)} 円/kg`;
-                            const v = ctx.parsed.y;
-                            return `前Q比: ${v > 0 ? '+' : ''}${v?.toFixed(2)} 円`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                y: {
-                    type: 'linear', position: 'left',
-                    ticks: { color: '#60a5fa' }, grid: { color: '#374151' },
-                    title: { display: true, text: '市場価格 (円/kg)', color: '#60a5fa' }
-                },
-                y2: {
-                    type: 'linear', position: 'right',
-                    ticks: { color: '#9ca3af' }, grid: { drawOnChartArea: false },
-                    title: { display: true, text: '前Q比 (円/kg)', color: '#9ca3af' }
-                }
-            }
-        }
-    });
-}
-
-/* ========== ユーティリティ ========== */
-function avg(arr) {
-    if (!arr || !arr.length) return null;
-    return arr.reduce((s, v) => s + v, 0) / arr.length;
-}
-
-function getQuarter(yearMonth) {
-    const m = parseInt(yearMonth.split('/')[1]);
-    if (m <= 3) return 'Q1';
-    if (m <= 6) return 'Q2';
-    if (m <= 9) return 'Q3';
-    return 'Q4';
-}
-
-function switchTab(tabName, btn) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(tabName).classList.add('active');
-    btn.classList.add('active');
-
-    if (allData) {
-        if (tabName === 'daily') renderDaily();
-        else if (tabName === 'monthly') renderMonthly();
-        else if (tabName === 'quarterly') renderQuarterly();
-        else if (tabName === 'negotiation') renderNegotiation();
-    }
-}
-
-/* ========== 相場レポートタブ ========== */
-function renderNegotiation() {
-    const monthly = (allData.monthly || [])
-        .filter(d => d.marketPrice != null)
-        .sort((a, b) => a.yearMonth.localeCompare(b.yearMonth));
-
-    if (!monthly.length) {
-        document.getElementById('negotiation').innerHTML = '<div class="error">データなし</div>';
-        return;
-    }
-
-    // 四半期集計
-    const qMap = {};
-    monthly.forEach(d => {
-        const year = d.yearMonth.split('/')[0];
-        const q = d.quarter || getQuarter(d.yearMonth);
-        const key = `${year}-${q}`;
-        if (!qMap[key]) qMap[key] = { label: `${year} ${q}`, prices: [], feeds: [], fxs: [] };
-        qMap[key].prices.push(d.marketPrice);
-        if (d.feedPrice) qMap[key].feeds.push(d.feedPrice);
-        if (d.usdjpy) qMap[key].fxs.push(d.usdjpy);
-    });
-    const quarters = Object.entries(qMap)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([k, v], i, arr) => {
-            const avgP = avg(v.prices);
-            const prevAvg = i > 0 ? avg(arr[i-1][1].prices) : null;
-            return {
-                label: v.label,
-                avgMarket: avgP,
-                avgFeed: avg(v.feeds),
-                avgFx: avg(v.fxs),
-                diff: prevAvg != null ? avgP - prevAvg : null,
-                count: v.prices.length,
-            };
-        });
-
-    const latestQ = quarters[quarters.length - 1];
-    const prevQ = quarters[quarters.length - 2];
-    const prev2Q = quarters[quarters.length - 3];
-
-    // 直近3四半期の平均
-    const recent3avg = avg(quarters.slice(-3).map(q => q.avgMarket));
-    // 直近6ヶ月の最安値・最高値
-    const recent6m = monthly.slice(-6);
-    const minRecent = Math.min(...recent6m.map(d => d.marketPrice));
-    const maxRecent = Math.max(...recent6m.map(d => d.marketPrice));
-    const latestPrice = monthly[monthly.length - 1].marketPrice;
-    const latestYM = monthly[monthly.length - 1].yearMonth;
-
-    // 価格ポジション（0-100）
-    const range = maxRecent - minRecent;
-    const position = range > 0 ? ((latestPrice - minRecent) / range * 100) : 50;
-
-    // 相場判定
-    let verdictClass, verdictLabel, verdictText;
-    if (position >= 70) {
-        verdictClass = 'verdict-high';
-        verdictLabel = '⚠️ 相場は高水準';
-        verdictText = `直近6ヶ月の価格レンジ（${minRecent.toFixed(1)}〜${maxRecent.toFixed(1)}円）の中で上位${(100-position).toFixed(0)}%に位置します。買取価格の引き上げ交渉に有利な状況です。`;
-    } else if (position <= 30) {
-        verdictClass = 'verdict-low';
-        verdictLabel = '✅ 相場は低水準';
-        verdictText = `直近6ヶ月の価格レンジの下位${position.toFixed(0)}%に位置します。現在の相場水準を根拠に、買取価格の維持・改善を主張できます。`;
-    } else {
-        verdictClass = 'verdict-mid';
-        verdictLabel = '📊 相場は概ね平均的';
-        verdictText = `直近6ヶ月の価格レンジ内の中間水準です。四半期トレンドと飼料コストの根拠を組み合わせて交渉を進めることが有効です。`;
-    }
-
-    // トレンド判定
-    const trendUp = latestQ.diff != null && latestQ.diff > 0;
-    const trendFlat = latestQ.diff != null && Math.abs(latestQ.diff) < 1;
-
-    // 飼料・為替コメント
-    const feedLatest = quarterly.length ? quarterly.slice(-1)[0] : null;
-    const feedComment = feedLatest
-        ? `${feedLatest.year} ${feedLatest.quarter} 配合飼料: ${feedLatest.pricePerTon?.toLocaleString()}円/t（前期比${feedLatest.changeFromPrev > 0 ? '+' : ''}${feedLatest.changeFromPrev?.toLocaleString()}円）`
-        : '飼料データなし';
-    const fxLatest = monthly[monthly.length - 1].usdjpy;
-    const fxComment = fxLatest >= 155 ? `USD/JPY ${fxLatest}円（円安継続）→ 次期飼料値上げリスク大` : `USD/JPY ${fxLatest}円`;
-
-    const quarterly = allData.quarterly || [];
-
-    const html = `
-    <!-- 判定ボックス -->
-    <div class="neg-section">
-        <div class="neg-section-title">🔍 現在の相場ポジション（${latestYM} 時点）</div>
-        <div class="verdict-box ${verdictClass}">
-            <div>
-                <div class="verdict-label">${verdictLabel}</div>
-                <div class="verdict-desc" style="margin-top:8px;">${verdictText}</div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-size:32px;font-weight:800;color:#60a5fa;">${latestPrice.toFixed(2)}</div>
-                <div style="font-size:13px;color:#9ca3af;">円/kg（現在）</div>
-            </div>
-        </div>
-
-        <!-- 価格バー -->
-        <div class="price-bar-wrap">
-            <div class="price-bar-label">
-                <span>安値: ${minRecent.toFixed(1)}円</span>
-                <span style="font-weight:700;color:#60a5fa;">現在: ${latestPrice.toFixed(2)}円（直近6ヶ月中 ${position.toFixed(0)}%位置）</span>
-                <span>高値: ${maxRecent.toFixed(1)}円</span>
-            </div>
-            <div class="price-bar-track">
-                <div class="price-bar-fill" style="width:${position.toFixed(1)}%;background:${position>=70?'#f87171':position<=30?'#4ade80':'#fbbf24'};"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 交渉根拠サマリー -->
-    <div class="neg-section">
-        <div class="neg-section-title">📋 交渉根拠サマリー</div>
-        <div class="neg-grid">
-            <div class="neg-card">
-                <div class="neg-card-label">現在の市場価格</div>
-                <div class="neg-card-value" style="color:#60a5fa;">${latestPrice.toFixed(2)} <span style="font-size:14px;color:#9ca3af;">円/kg</span></div>
-                <div class="neg-card-sub">${latestYM} 時点</div>
-            </div>
-            <div class="neg-card">
-                <div class="neg-card-label">直近3四半期 平均</div>
-                <div class="neg-card-value" style="color:#a78bfa;">${recent3avg?.toFixed(2) ?? '—'} <span style="font-size:14px;color:#9ca3af;">円/kg</span></div>
-                <div class="neg-card-sub">${quarters.slice(-3).map(q=>q.label).join(' / ')}</div>
-            </div>
-            <div class="neg-card">
-                <div class="neg-card-label">最新四半期 前Q比</div>
-                <div class="neg-card-value" style="color:${latestQ.diff>0?'#f87171':latestQ.diff<0?'#4ade80':'#9ca3af'};">
-                    ${latestQ.diff != null ? (latestQ.diff > 0 ? '+' : '') + latestQ.diff.toFixed(2) : '—'} <span style="font-size:14px;color:#9ca3af;">円/kg</span>
+        
+        function renderDaily() {
+            const months = [...new Set(dailyData.map(d => d.yearMonth))].sort().reverse();
+            const currentMonth = months[0];
+            const filtered = dailyData.filter(d => d.yearMonth === currentMonth).sort((a, b) => a.date.localeCompare(b.date));
+            
+            if (!filtered.length) return;
+            
+            const latest = filtered[filtered.length - 1];
+            const prev = filtered[filtered.length - 2];
+            const mpDiff = latest && prev && latest.marketPrice != null && prev.marketPrice != null
+                ? (latest.marketPrice - prev.marketPrice).toFixed(2)
+                : null;
+            
+            const monthAvg = filtered.filter(d => d.marketPrice).length
+                ? (filtered.reduce((s, d) => s + (d.marketPrice || 0), 0) / filtered.filter(d => d.marketPrice).length).toFixed(2)
+                : null;
+            
+            let html = `
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">🐔 最新 市場価格 (${latest.date})</div>
+                        <div class="kpi-value">${latest.marketPrice?.toFixed(2) || '—'}</div>
+                        <div class="kpi-sub">前日比 ${mpDiff != null ? (mpDiff > 0 ? '+' : '') + mpDiff : '—'}円</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">もも加重 / むね加重</div>
+                        <div class="kpi-value" style="font-size: 24px;">${latest.momoWeighted} / ${latest.muneWeighted}</div>
+                        <div class="kpi-sub">${DAY_MAP[latest.dayOfWeek]}曜日</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">📊 ${currentMonth} 市場価格 月間平均</div>
+                        <div class="kpi-value">${monthAvg || '—'}</div>
+                        <div class="kpi-sub">${filtered.filter(d => d.marketPrice).length}営業日</div>
+                    </div>
                 </div>
-                <div class="neg-card-sub">${latestQ.label} (${latestQ.count}ヶ月平均)</div>
-            </div>
-            <div class="neg-card">
-                <div class="neg-card-label">配合飼料（最新期）</div>
-                <div class="neg-card-value" style="color:#fb923c;">${latestQ.avgFeed?.toLocaleString(undefined,{maximumFractionDigits:0}) ?? '—'} <span style="font-size:14px;color:#9ca3af;">円/t</span></div>
-                <div class="neg-card-sub">${fxComment}</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 四半期別推移テーブル（交渉根拠用） -->
-    <div class="neg-section">
-        <div class="neg-section-title">📊 四半期別 市場価格推移（交渉資料用）</div>
-        <table class="evidence-table">
-            <thead>
-                <tr>
-                    <th>四半期</th>
-                    <th style="color:#60a5fa;">平均市場価格</th>
-                    <th style="color:#34d399;">前Q比</th>
-                    <th style="color:#fb923c;">配合飼料</th>
-                    <th style="color:#f472b6;">USD/JPY</th>
-                    <th>評価</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${[...quarters].reverse().map(q => {
-                    const isLatest = q.label === latestQ.label;
-                    const diffColor = q.diff > 0 ? '#f87171' : q.diff < 0 ? '#4ade80' : '#9ca3af';
-                    const evalText = q.diff == null ? '—'
-                        : q.diff > 2 ? '<span style="color:#f87171;">↑ 上昇</span>'
-                        : q.diff < -2 ? '<span style="color:#4ade80;">↓ 下降</span>'
-                        : '<span style="color:#9ca3af;">→ 横ばい</span>';
-                    return `<tr ${isLatest ? 'style="background:#1e3a5f;border-left:3px solid #2563eb;"' : ''}>
-                        <td><span class="q-label">${q.label}</span>${isLatest ? ' <span style="font-size:10px;color:#60a5fa;margin-left:4px;">最新</span>' : ''}</td>
-                        <td style="font-weight:700;color:#60a5fa;">${q.avgMarket?.toFixed(2)} 円/kg</td>
-                        <td style="color:${diffColor};">${q.diff != null ? (q.diff > 0 ? '+' : '') + q.diff.toFixed(2) : '—'}</td>
-                        <td style="color:#fb923c;">${q.avgFeed?.toLocaleString(undefined,{maximumFractionDigits:0}) ?? '—'} 円/t</td>
-                        <td style="color:#f472b6;">${q.avgFx?.toFixed(1) ?? '—'}</td>
-                        <td>${evalText}</td>
-                    </tr>`;
-                }).join('')}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- コスト要因分析 -->
-    <div class="neg-section">
-        <div class="neg-section-title">🌾 コスト要因分析（交渉の裏付け）</div>
-        <ul class="bullet-list">
-            ${feedLatest && feedLatest.changeFromPrev > 0
-                ? `<li><span class="bullet-icon">🔴</span><span>配合飼料が<strong>${feedLatest.year} ${feedLatest.quarter}に+${feedLatest.changeFromPrev?.toLocaleString()}円/t</strong>の値上げ。現在${feedLatest.pricePerTon?.toLocaleString()}円/t（直近最高水準）。生産コスト上昇の直接根拠として提示可能です。</span></li>`
-                : `<li><span class="bullet-icon">🟡</span><span>配合飼料: ${feedComment}</span></li>`}
-            ${fxLatest >= 155
-                ? `<li><span class="bullet-icon">🔴</span><span>USD/JPY <strong>${fxLatest}円</strong>（円安継続）。過去のパターンでは155円超が次期飼料値上げのトリガー。<strong>次期さらなる仕入れコスト増加のリスク</strong>として説明できます。</span></li>`
-                : `<li><span class="bullet-icon">🟡</span><span>USD/JPY ${fxLatest}円。現時点では急激な為替リスクは限定的です。</span></li>`}
-            <li><span class="bullet-icon">📈</span><span>直近3四半期の市場価格平均は<strong>${recent3avg?.toFixed(2)}円/kg</strong>。現在価格と比較して市場の実勢水準を根拠として提示できます。</span></li>
-            <li><span class="bullet-icon">📌</span><span>2026年Q1・Q2は2期連続で飼料が値上がり（計+5,450円/t）。<strong>仕入れコストの上昇トレンドが続いている</strong>ことを数字で示せます。</span></li>
-        </ul>
-    </div>
-
-    <!-- 月次実績テーブル（コンパクト） -->
-    <div class="neg-section">
-        <div class="neg-section-title">📅 直近6ヶ月 月次実績（参考データ）</div>
-        <table class="evidence-table">
-            <thead>
-                <tr>
-                    <th>年月</th>
-                    <th style="color:#60a5fa;">市場価格</th>
-                    <th style="color:#34d399;">前月比</th>
-                    <th style="color:#fb923c;">配合飼料</th>
-                    <th style="color:#f472b6;">USD/JPY</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${[...monthly].slice(-6).reverse().map((row, i, arr) => {
-                    const prev = arr[i+1];
-                    const diff = prev ? row.marketPrice - prev.marketPrice : null;
-                    const diffColor = diff > 0 ? '#f87171' : diff < 0 ? '#4ade80' : '#9ca3af';
-                    const isLatest = i === 0;
-                    return `<tr ${isLatest ? 'style="background:#1e3a5f;"' : ''}>
-                        <td>${row.yearMonth}${isLatest ? ' <span style="font-size:10px;color:#60a5fa;">最新</span>' : ''}</td>
-                        <td style="font-weight:${isLatest?'700':'400'};color:#60a5fa;">${row.marketPrice?.toFixed(2)} 円</td>
-                        <td style="color:${diffColor};">${diff != null ? (diff > 0 ? '+' : '') + diff.toFixed(2) : '—'}</td>
-                        <td style="color:#fb923c;">${row.feedPrice?.toLocaleString() ?? '—'}</td>
-                        <td style="color:#f472b6;">${row.usdjpy ?? '—'}</td>
-                    </tr>`;
-                }).join('')}
-            </tbody>
-        </table>
-        <p style="margin-top:12px;font-size:11px;color:#6b7280;">※ 市場価格 = (もも加重×0.55 + むね加重×0.45) × 0.32　全国食鳥新聞社データ</p>
-    </div>
-    `;
-
-    document.getElementById('negotiation').innerHTML = html;
-}
-
-
-loadData();
-setInterval(loadData, 30 * 60 * 1000);
-</script>
+                
+                <div class="chart-container">
+                    <div class="chart-title">${currentMonth} 日次 市場価格</div>
+                    <div class="chart-desc">計算式: (もも加重×0.55 + むね加重×0.45) × 0.32</div>
+                    <div class="chart-placeholder">📈 Recharts統合版で表示（簡易版は上記テーブルを参照）</div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">${currentMonth} 日次相場データ</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>曜日</th>
+                                <th style="color: #60a5fa;">市場価格</th>
+                                <th>もも加重</th>
+                                <th>むね加重</th>
+                                <th>もも販売量(t)</th>
+                                <th>むね販売量(t)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            [...filtered].reverse().forEach(row => {
+                html += `
+                    <tr>
+                        <td>${row.date}</td>
+                        <td>${DAY_MAP[row.dayOfWeek] || row.dayOfWeek}</td>
+                        <td class="value-highlight">${row.marketPrice?.toFixed(2) || '—'}</td>
+                        <td class="value-secondary">${row.momoWeighted || '—'}</td>
+                        <td class="value-secondary">${row.muneWeighted || '—'}</td>
+                        <td>${row.momoVolume || '—'}</td>
+                        <td>${row.muneVolume || '—'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('daily-content').innerHTML = html;
+        }
+        
+        function renderMonthly() {
+            const byMonth = {};
+            dailyData.forEach(d => {
+                if (!byMonth[d.yearMonth]) byMonth[d.yearMonth] = [];
+                if (d.marketPrice != null) byMonth[d.yearMonth].push(d.marketPrice);
+            });
+            
+            const data = Object.entries(byMonth)
+                .map(([ym, prices]) => ({
+                    yearMonth: ym,
+                    avgPrice: prices.length ? (prices.reduce((s, p) => s + p, 0) / prices.length).toFixed(2) : null,
+                    count: prices.length,
+                }))
+                .sort((a, b) => a.yearMonth.localeCompare(b.yearMonth));
+            
+            if (!data.length) return;
+            
+            let html = `
+                <div class="chart-container">
+                    <div class="chart-title">月次 市場価格推移</div>
+                    <div class="chart-placeholder">📈 チャート表示（簡易版は下記テーブルを参照）</div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">月別 市場価格平均</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>年月</th>
+                                <th style="color: #60a5fa;">市場価格平均</th>
+                                <th>営業日数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            [...data].reverse().forEach(row => {
+                html += `
+                    <tr>
+                        <td>${row.yearMonth}</td>
+                        <td class="value-highlight">${row.avgPrice || '—'}円/kg</td>
+                        <td>${row.count}日</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('monthly-content').innerHTML = html;
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // 初期読み込み
+        loadData();
+        
+        // 30分ごとに自動リロード
+        setInterval(() => {
+            loadData();
+        }, 30 * 60 * 1000);
+    </script>
 </body>
 </html>
