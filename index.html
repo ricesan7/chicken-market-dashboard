@@ -862,10 +862,15 @@ function renderQSummary() {
     const dailyMedianAvg = q.dailyMedians.length
       ? Math.round(q.dailyMedians.reduce((s,x)=>s+x.val,0) / q.dailyMedians.length)
       : null;
+    const _qSorted = [...q.prices].sort((a,b)=>a-b);
+    const _qn = _qSorted.length;
+    const qMedian = _qn % 2 === 0
+      ? Math.round((_qSorted[_qn/2-1] + _qSorted[_qn/2]) / 2)
+      : _qSorted[Math.floor(_qn/2)];
     return {
       label: q.year.slice(2)+'/'+q.quarter,
       year: q.year, quarter: q.quarter,
-      avg, max, min,
+      avg, max, min, qMedian,
       dailyMedians: q.dailyMedians,   // 月ごとの日次中値一覧
       dailyMedianAvg,                  // 四半期内の日次中値平均
       feedPrice: qInfo?.pricePerTon || q.feedPrice,
@@ -895,6 +900,9 @@ function renderQSummary() {
   const dMedians = qData.map(q=>q.dailyMedianAvg);
   const maxs   = qData.map(q=>q.max);
   const mins   = qData.map(q=>q.min);
+  // 四半期中値を水平ステップラインで表示するためのデータ展開
+  // 各四半期の中値を [開始点, 終了点] として折り返す形で作る
+  const qMedianStepData = qData.map(q => q.qMedian);
 
   document.getElementById('qsummary-content').innerHTML = `
     <!-- KPIサマリー -->
@@ -905,9 +913,9 @@ function renderQSummary() {
         <div class="kpi-sub">集計対象</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">全日次データ 中値</div>
-        <div class="kpi-value purple">${allDailyMedian??'—'}<small style="font-size:.9rem"> 円/kg</small></div>
-        <div class="kpi-sub">全期間の日次中央値（基準線）</div>
+        <div class="kpi-label">最新四半期 中値</div>
+        <div class="kpi-value orange">${qData[qData.length-1]?.qMedian??'—'}<small style="font-size:.9rem"> 円/kg</small></div>
+        <div class="kpi-sub">${qData[qData.length-1]?.label} 月次の中央値</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">最新四半期 月次平均</div>
@@ -924,7 +932,7 @@ function renderQSummary() {
     <!-- 四半期推移グラフ -->
     <div class="card">
       <h2>四半期相場価格推移</h2>
-      <p class="sub">月次平均（青）と全期間日次中値（オレンジ破線）を四半期ごとに比較</p>
+      <p class="sub">月次平均（青）と四半期中値（オレンジ破線・ステップ）を四半期ごとに比較</p>
       <div class="chart-wrap" style="height:300px"><canvas id="chart-qbar"></canvas></div>
     </div>
 
@@ -1050,14 +1058,15 @@ function renderQSummary() {
         },
         {
           type: 'line',
-          label: '全期間 日次中値',
-          data: labels.map(() => allDailyMedian),
+          label: '四半期中値',
+          data: qMedianStepData,
           borderColor: '#f59e0b',
           backgroundColor: 'transparent',
-          borderWidth: 2,
+          borderWidth: 2.5,
           borderDash: [8,4],
           pointRadius: 0,
           fill: false,
+          stepped: true,
           tension: 0,
           order: 5,
         },
