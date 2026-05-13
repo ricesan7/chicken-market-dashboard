@@ -315,13 +315,12 @@ function renderMonthly() {
         <div class="kpi-sub">${latestFeed?.yearMonth||''} ${latestFeed?.quarter||''}</div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+    <div style="margin-bottom:20px;max-width:calc(50% - 6px);">
       <div class="kpi">
         <div class="kpi-label">💴 最新 USD/JPY</div>
         <div class="kpi-value green">${latestFx?.usdjpy||'—'}<small style="font-size:.9rem"> 円</small></div>
         <div class="kpi-sub">月末終値</div>
       </div>
-      <div style="visibility:hidden;" class="kpi"></div>
     </div>`;
 
   const labels  = data.map(m=>m.yearMonth.slice(2));
