@@ -111,7 +111,7 @@
             color: #60a5fa;
         }
 
-        /* 交渉サポートタブ専用 */
+        /* 相場レポートタブ専用 */
         .negotiation-tab { background: linear-gradient(135deg, #1e3a5f, #1a2e4a); color: #60a5fa !important; border: 1px solid #2563eb; }
         .negotiation-tab.active { background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: #fff !important; border: none; }
         .neg-section { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
@@ -168,7 +168,7 @@
         <button class="tab-btn active" onclick="switchTab('daily', this)">📅 日次相場</button>
         <button class="tab-btn" onclick="switchTab('monthly', this)">📈 月次推移</button>
         <button class="tab-btn" onclick="switchTab('quarterly', this)">📊 四半期推移</button>
-        <button class="tab-btn negotiation-tab" onclick="switchTab('negotiation', this)">🤝 交渉サポート</button>
+        <button class="tab-btn negotiation-tab" onclick="switchTab('negotiation', this)">📋 相場レポート</button>
         <button class="tab-btn" onclick="switchTab('info', this)">ℹ️ 説明</button>
     </div>
 
@@ -722,7 +722,7 @@ function switchTab(tabName, btn) {
     }
 }
 
-/* ========== 交渉サポートタブ ========== */
+/* ========== 相場レポートタブ ========== */
 function renderNegotiation() {
     const monthly = (allData.monthly || [])
         .filter(d => d.marketPrice != null)
