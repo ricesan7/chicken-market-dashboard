@@ -110,6 +110,44 @@
             background: #1e3a5f;
             color: #60a5fa;
         }
+
+        /* 交渉サポートタブ専用 */
+        .negotiation-tab { background: linear-gradient(135deg, #1e3a5f, #1a2e4a); color: #60a5fa !important; border: 1px solid #2563eb; }
+        .negotiation-tab.active { background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: #fff !important; border: none; }
+        .neg-section { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .neg-section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .verdict-box { border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .verdict-high { background: #7f1d1d; border: 1px solid #dc2626; }
+        .verdict-mid { background: #78350f; border: 1px solid #d97706; }
+        .verdict-low { background: #14532d; border: 1px solid #16a34a; }
+        .verdict-label { font-size: 22px; font-weight: 800; }
+        .verdict-high .verdict-label { color: #f87171; }
+        .verdict-mid .verdict-label { color: #fbbf24; }
+        .verdict-low .verdict-label { color: #4ade80; }
+        .verdict-desc { font-size: 13px; color: #d1d5db; line-height: 1.6; max-width: 500px; }
+        .neg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .neg-card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 16px; }
+        .neg-card-label { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+        .neg-card-value { font-size: 22px; font-weight: 700; }
+        .neg-card-sub { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+        .evidence-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .evidence-table th { padding: 10px 12px; text-align: left; color: #9ca3af; font-weight: 600; background: #111827; border-bottom: 1px solid #374151; }
+        .evidence-table td { padding: 10px 12px; border-bottom: 1px solid #2d3748; }
+        .evidence-table tr:last-child td { border-bottom: none; }
+        .evidence-table tr:hover td { background: #374151; }
+        .trend-arrow { font-size: 18px; }
+        .bullet-list { list-style: none; padding: 0; }
+        .bullet-list li { padding: 10px 0; border-bottom: 1px solid #374151; font-size: 13px; color: #d1d5db; line-height: 1.6; display: flex; gap: 10px; }
+        .bullet-list li:last-child { border-bottom: none; }
+        .bullet-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+        .price-bar-wrap { margin: 8px 0; }
+        .price-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+        .price-bar-track { background: #374151; border-radius: 4px; height: 10px; overflow: hidden; }
+        .price-bar-fill { height: 100%; border-radius: 4px; }
+        @media (max-width: 600px) {
+            .verdict-box { flex-direction: column; }
+            .neg-card-value { font-size: 18px; }
+        }
         @media (max-width: 768px) {
             h1 { font-size: 22px; }
             .kpi-grid { grid-template-columns: 1fr; }
@@ -130,6 +168,7 @@
         <button class="tab-btn active" onclick="switchTab('daily', this)">📅 日次相場</button>
         <button class="tab-btn" onclick="switchTab('monthly', this)">📈 月次推移</button>
         <button class="tab-btn" onclick="switchTab('quarterly', this)">📊 四半期推移</button>
+        <button class="tab-btn negotiation-tab" onclick="switchTab('negotiation', this)">🤝 交渉サポート</button>
         <button class="tab-btn" onclick="switchTab('info', this)">ℹ️ 説明</button>
     </div>
 
@@ -168,6 +207,10 @@
     </div>
 </div>
 
+    <div id="negotiation" class="tab-content">
+        <div class="loading">⏳ データを読み込み中...</div>
+    </div>
+
 <script>
 const DAY_MAP = { 'Mon': '月', 'Tue': '火', 'Wed': '水', 'Thu': '木', 'Fri': '金', 'Sat': '土', 'Sun': '日' };
 
@@ -190,6 +233,7 @@ async function loadData() {
         renderDaily();
         renderMonthly();
         renderQuarterly();
+        renderNegotiation();
 
         const d = new Date(allData.fetchedAt);
         document.getElementById('lastUpdated').textContent = `最終更新: ${d.toLocaleString('ja-JP')}`;
@@ -674,8 +718,237 @@ function switchTab(tabName, btn) {
         if (tabName === 'daily') renderDaily();
         else if (tabName === 'monthly') renderMonthly();
         else if (tabName === 'quarterly') renderQuarterly();
+        else if (tabName === 'negotiation') renderNegotiation();
     }
 }
+
+/* ========== 交渉サポートタブ ========== */
+function renderNegotiation() {
+    const monthly = (allData.monthly || [])
+        .filter(d => d.marketPrice != null)
+        .sort((a, b) => a.yearMonth.localeCompare(b.yearMonth));
+
+    if (!monthly.length) {
+        document.getElementById('negotiation').innerHTML = '<div class="error">データなし</div>';
+        return;
+    }
+
+    // 四半期集計
+    const qMap = {};
+    monthly.forEach(d => {
+        const year = d.yearMonth.split('/')[0];
+        const q = d.quarter || getQuarter(d.yearMonth);
+        const key = `${year}-${q}`;
+        if (!qMap[key]) qMap[key] = { label: `${year} ${q}`, prices: [], feeds: [], fxs: [] };
+        qMap[key].prices.push(d.marketPrice);
+        if (d.feedPrice) qMap[key].feeds.push(d.feedPrice);
+        if (d.usdjpy) qMap[key].fxs.push(d.usdjpy);
+    });
+    const quarters = Object.entries(qMap)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([k, v], i, arr) => {
+            const avgP = avg(v.prices);
+            const prevAvg = i > 0 ? avg(arr[i-1][1].prices) : null;
+            return {
+                label: v.label,
+                avgMarket: avgP,
+                avgFeed: avg(v.feeds),
+                avgFx: avg(v.fxs),
+                diff: prevAvg != null ? avgP - prevAvg : null,
+                count: v.prices.length,
+            };
+        });
+
+    const latestQ = quarters[quarters.length - 1];
+    const prevQ = quarters[quarters.length - 2];
+    const prev2Q = quarters[quarters.length - 3];
+
+    // 直近3四半期の平均
+    const recent3avg = avg(quarters.slice(-3).map(q => q.avgMarket));
+    // 直近6ヶ月の最安値・最高値
+    const recent6m = monthly.slice(-6);
+    const minRecent = Math.min(...recent6m.map(d => d.marketPrice));
+    const maxRecent = Math.max(...recent6m.map(d => d.marketPrice));
+    const latestPrice = monthly[monthly.length - 1].marketPrice;
+    const latestYM = monthly[monthly.length - 1].yearMonth;
+
+    // 価格ポジション（0-100）
+    const range = maxRecent - minRecent;
+    const position = range > 0 ? ((latestPrice - minRecent) / range * 100) : 50;
+
+    // 相場判定
+    let verdictClass, verdictLabel, verdictText;
+    if (position >= 70) {
+        verdictClass = 'verdict-high';
+        verdictLabel = '⚠️ 相場は高水準';
+        verdictText = `直近6ヶ月の価格レンジ（${minRecent.toFixed(1)}〜${maxRecent.toFixed(1)}円）の中で上位${(100-position).toFixed(0)}%に位置します。買取価格の引き上げ交渉に有利な状況です。`;
+    } else if (position <= 30) {
+        verdictClass = 'verdict-low';
+        verdictLabel = '✅ 相場は低水準';
+        verdictText = `直近6ヶ月の価格レンジの下位${position.toFixed(0)}%に位置します。現在の相場水準を根拠に、買取価格の維持・改善を主張できます。`;
+    } else {
+        verdictClass = 'verdict-mid';
+        verdictLabel = '📊 相場は概ね平均的';
+        verdictText = `直近6ヶ月の価格レンジ内の中間水準です。四半期トレンドと飼料コストの根拠を組み合わせて交渉を進めることが有効です。`;
+    }
+
+    // トレンド判定
+    const trendUp = latestQ.diff != null && latestQ.diff > 0;
+    const trendFlat = latestQ.diff != null && Math.abs(latestQ.diff) < 1;
+
+    // 飼料・為替コメント
+    const feedLatest = quarterly.length ? quarterly.slice(-1)[0] : null;
+    const feedComment = feedLatest
+        ? `${feedLatest.year} ${feedLatest.quarter} 配合飼料: ${feedLatest.pricePerTon?.toLocaleString()}円/t（前期比${feedLatest.changeFromPrev > 0 ? '+' : ''}${feedLatest.changeFromPrev?.toLocaleString()}円）`
+        : '飼料データなし';
+    const fxLatest = monthly[monthly.length - 1].usdjpy;
+    const fxComment = fxLatest >= 155 ? `USD/JPY ${fxLatest}円（円安継続）→ 次期飼料値上げリスク大` : `USD/JPY ${fxLatest}円`;
+
+    const quarterly = allData.quarterly || [];
+
+    const html = `
+    <!-- 判定ボックス -->
+    <div class="neg-section">
+        <div class="neg-section-title">🔍 現在の相場ポジション（${latestYM} 時点）</div>
+        <div class="verdict-box ${verdictClass}">
+            <div>
+                <div class="verdict-label">${verdictLabel}</div>
+                <div class="verdict-desc" style="margin-top:8px;">${verdictText}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:32px;font-weight:800;color:#60a5fa;">${latestPrice.toFixed(2)}</div>
+                <div style="font-size:13px;color:#9ca3af;">円/kg（現在）</div>
+            </div>
+        </div>
+
+        <!-- 価格バー -->
+        <div class="price-bar-wrap">
+            <div class="price-bar-label">
+                <span>安値: ${minRecent.toFixed(1)}円</span>
+                <span style="font-weight:700;color:#60a5fa;">現在: ${latestPrice.toFixed(2)}円（直近6ヶ月中 ${position.toFixed(0)}%位置）</span>
+                <span>高値: ${maxRecent.toFixed(1)}円</span>
+            </div>
+            <div class="price-bar-track">
+                <div class="price-bar-fill" style="width:${position.toFixed(1)}%;background:${position>=70?'#f87171':position<=30?'#4ade80':'#fbbf24'};"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交渉根拠サマリー -->
+    <div class="neg-section">
+        <div class="neg-section-title">📋 交渉根拠サマリー</div>
+        <div class="neg-grid">
+            <div class="neg-card">
+                <div class="neg-card-label">現在の市場価格</div>
+                <div class="neg-card-value" style="color:#60a5fa;">${latestPrice.toFixed(2)} <span style="font-size:14px;color:#9ca3af;">円/kg</span></div>
+                <div class="neg-card-sub">${latestYM} 時点</div>
+            </div>
+            <div class="neg-card">
+                <div class="neg-card-label">直近3四半期 平均</div>
+                <div class="neg-card-value" style="color:#a78bfa;">${recent3avg?.toFixed(2) ?? '—'} <span style="font-size:14px;color:#9ca3af;">円/kg</span></div>
+                <div class="neg-card-sub">${quarters.slice(-3).map(q=>q.label).join(' / ')}</div>
+            </div>
+            <div class="neg-card">
+                <div class="neg-card-label">最新四半期 前Q比</div>
+                <div class="neg-card-value" style="color:${latestQ.diff>0?'#f87171':latestQ.diff<0?'#4ade80':'#9ca3af'};">
+                    ${latestQ.diff != null ? (latestQ.diff > 0 ? '+' : '') + latestQ.diff.toFixed(2) : '—'} <span style="font-size:14px;color:#9ca3af;">円/kg</span>
+                </div>
+                <div class="neg-card-sub">${latestQ.label} (${latestQ.count}ヶ月平均)</div>
+            </div>
+            <div class="neg-card">
+                <div class="neg-card-label">配合飼料（最新期）</div>
+                <div class="neg-card-value" style="color:#fb923c;">${latestQ.avgFeed?.toLocaleString(undefined,{maximumFractionDigits:0}) ?? '—'} <span style="font-size:14px;color:#9ca3af;">円/t</span></div>
+                <div class="neg-card-sub">${fxComment}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 四半期別推移テーブル（交渉根拠用） -->
+    <div class="neg-section">
+        <div class="neg-section-title">📊 四半期別 市場価格推移（交渉資料用）</div>
+        <table class="evidence-table">
+            <thead>
+                <tr>
+                    <th>四半期</th>
+                    <th style="color:#60a5fa;">平均市場価格</th>
+                    <th style="color:#34d399;">前Q比</th>
+                    <th style="color:#fb923c;">配合飼料</th>
+                    <th style="color:#f472b6;">USD/JPY</th>
+                    <th>評価</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${[...quarters].reverse().map(q => {
+                    const isLatest = q.label === latestQ.label;
+                    const diffColor = q.diff > 0 ? '#f87171' : q.diff < 0 ? '#4ade80' : '#9ca3af';
+                    const evalText = q.diff == null ? '—'
+                        : q.diff > 2 ? '<span style="color:#f87171;">↑ 上昇</span>'
+                        : q.diff < -2 ? '<span style="color:#4ade80;">↓ 下降</span>'
+                        : '<span style="color:#9ca3af;">→ 横ばい</span>';
+                    return `<tr ${isLatest ? 'style="background:#1e3a5f;border-left:3px solid #2563eb;"' : ''}>
+                        <td><span class="q-label">${q.label}</span>${isLatest ? ' <span style="font-size:10px;color:#60a5fa;margin-left:4px;">最新</span>' : ''}</td>
+                        <td style="font-weight:700;color:#60a5fa;">${q.avgMarket?.toFixed(2)} 円/kg</td>
+                        <td style="color:${diffColor};">${q.diff != null ? (q.diff > 0 ? '+' : '') + q.diff.toFixed(2) : '—'}</td>
+                        <td style="color:#fb923c;">${q.avgFeed?.toLocaleString(undefined,{maximumFractionDigits:0}) ?? '—'} 円/t</td>
+                        <td style="color:#f472b6;">${q.avgFx?.toFixed(1) ?? '—'}</td>
+                        <td>${evalText}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- コスト要因分析 -->
+    <div class="neg-section">
+        <div class="neg-section-title">🌾 コスト要因分析（交渉の裏付け）</div>
+        <ul class="bullet-list">
+            ${feedLatest && feedLatest.changeFromPrev > 0
+                ? `<li><span class="bullet-icon">🔴</span><span>配合飼料が<strong>${feedLatest.year} ${feedLatest.quarter}に+${feedLatest.changeFromPrev?.toLocaleString()}円/t</strong>の値上げ。現在${feedLatest.pricePerTon?.toLocaleString()}円/t（直近最高水準）。生産コスト上昇の直接根拠として提示可能です。</span></li>`
+                : `<li><span class="bullet-icon">🟡</span><span>配合飼料: ${feedComment}</span></li>`}
+            ${fxLatest >= 155
+                ? `<li><span class="bullet-icon">🔴</span><span>USD/JPY <strong>${fxLatest}円</strong>（円安継続）。過去のパターンでは155円超が次期飼料値上げのトリガー。<strong>次期さらなる仕入れコスト増加のリスク</strong>として説明できます。</span></li>`
+                : `<li><span class="bullet-icon">🟡</span><span>USD/JPY ${fxLatest}円。現時点では急激な為替リスクは限定的です。</span></li>`}
+            <li><span class="bullet-icon">📈</span><span>直近3四半期の市場価格平均は<strong>${recent3avg?.toFixed(2)}円/kg</strong>。現在価格と比較して市場の実勢水準を根拠として提示できます。</span></li>
+            <li><span class="bullet-icon">📌</span><span>2026年Q1・Q2は2期連続で飼料が値上がり（計+5,450円/t）。<strong>仕入れコストの上昇トレンドが続いている</strong>ことを数字で示せます。</span></li>
+        </ul>
+    </div>
+
+    <!-- 月次実績テーブル（コンパクト） -->
+    <div class="neg-section">
+        <div class="neg-section-title">📅 直近6ヶ月 月次実績（参考データ）</div>
+        <table class="evidence-table">
+            <thead>
+                <tr>
+                    <th>年月</th>
+                    <th style="color:#60a5fa;">市場価格</th>
+                    <th style="color:#34d399;">前月比</th>
+                    <th style="color:#fb923c;">配合飼料</th>
+                    <th style="color:#f472b6;">USD/JPY</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${[...monthly].slice(-6).reverse().map((row, i, arr) => {
+                    const prev = arr[i+1];
+                    const diff = prev ? row.marketPrice - prev.marketPrice : null;
+                    const diffColor = diff > 0 ? '#f87171' : diff < 0 ? '#4ade80' : '#9ca3af';
+                    const isLatest = i === 0;
+                    return `<tr ${isLatest ? 'style="background:#1e3a5f;"' : ''}>
+                        <td>${row.yearMonth}${isLatest ? ' <span style="font-size:10px;color:#60a5fa;">最新</span>' : ''}</td>
+                        <td style="font-weight:${isLatest?'700':'400'};color:#60a5fa;">${row.marketPrice?.toFixed(2)} 円</td>
+                        <td style="color:${diffColor};">${diff != null ? (diff > 0 ? '+' : '') + diff.toFixed(2) : '—'}</td>
+                        <td style="color:#fb923c;">${row.feedPrice?.toLocaleString() ?? '—'}</td>
+                        <td style="color:#f472b6;">${row.usdjpy ?? '—'}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+        <p style="margin-top:12px;font-size:11px;color:#6b7280;">※ 市場価格 = (もも加重×0.55 + むね加重×0.45) × 0.32　全国食鳥新聞社データ</p>
+    </div>
+    `;
+
+    document.getElementById('negotiation').innerHTML = html;
+}
+
 
 loadData();
 setInterval(loadData, 30 * 60 * 1000);
