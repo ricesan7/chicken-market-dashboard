@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐔 鶏肉相場ダッシュボード | DIYstation</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #f3f4f6; color: #111827; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
@@ -901,21 +900,14 @@ function renderQSummary() {
   const dMedians = qData.map(q=>q.dailyMedianAvg);
   const maxs   = qData.map(q=>q.max);
   const mins   = qData.map(q=>q.min);
-  // 四半期中値アノテーション用データ
-  const qMedianAnnotations = {};
-  qData.forEach((q, i) => {
-    qMedianAnnotations['qMedian_'+i] = {
-      type: 'line',
-      scaleID: 'y',
-      value: q.qMedian,
-      xMin: i - 0.45,
-      xMax: i + 0.45,
-      borderColor: '#f59e0b',
-      borderWidth: 2.5,
-      borderDash: [6, 3],
-      label: { display: false }
-    };
-  });
+  // 全四半期MarketPriceから1本の中値を計算
+  const allQPrices = qData.map(q => q.avg).sort((a,b)=>a-b);
+  const _aqn = allQPrices.length;
+  const allQMedian = _aqn === 0 ? null
+    : _aqn % 2 === 0
+      ? Math.round((allQPrices[_aqn/2-1] + allQPrices[_aqn/2]) / 2)
+      : allQPrices[Math.floor(_aqn/2)];
+  const qMedianLineData = labels.map(() => allQMedian);
 
   document.getElementById('qsummary-content').innerHTML = `
     <!-- KPIサマリー -->
@@ -945,7 +937,7 @@ function renderQSummary() {
     <!-- 四半期推移グラフ -->
     <div class="card">
       <h2>四半期相場価格推移</h2>
-      <p class="sub">月次平均（青）と四半期中値（オレンジ破線・ステップ）を四半期ごとに比較</p>
+      <p class="sub">月次平均（青）と全四半期中値（オレンジ破線）を比較</p>
       <div class="chart-wrap" style="height:300px"><canvas id="chart-qbar"></canvas></div>
     </div>
 
@@ -1070,6 +1062,19 @@ function renderQSummary() {
           order: 4,
         },
 
+        {
+          type: 'line',
+          label: '四半期中値',
+          data: qMedianLineData,
+          borderColor: '#f59e0b',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [8, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 5,
+        },
       ]
     },
     options: {
@@ -1077,7 +1082,6 @@ function renderQSummary() {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        annotation: { annotations: qMedianAnnotations },
         legend: { labels: { color: '#374151', font: { size: 11 }, padding: 14 } },
         tooltip: {
           callbacks: {
