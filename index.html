@@ -303,17 +303,17 @@ function renderMonthly() {
   const latestFx   = [...MONTHLY].reverse().find(m=>m.usdjpy);
 
   document.getElementById('monthly-kpi').innerHTML = `
-    <div class="kpi"><div class="kpi-label">最新月 市場価格</div>
-      <div class="kpi-value blue">${latest.marketPrice}<small style="font-size:.9rem">円</small></div>
-      <div class="kpi-sub">${latest.yearMonth}${diff!=null?'　前月比 '+(diff>=0?'<span class="up">+'+diff+'</span>':'<span class="down">'+diff+'</span>')+'円':''}</div>
+    <div class="kpi"><div class="kpi-label">🐔 最新 市場価格</div>
+      <div class="kpi-value blue">${latest.marketPrice}<small style="font-size:1rem">.00 円/kg</small></div>
+      <div class="kpi-sub">${latest.yearMonth} 時点${diff!=null?'　前月比 '+(diff>=0?'<span class="up">+'+diff+'</span>':'<span class="down">'+diff+'</span>')+'円':''}</div>
     </div>
-    <div class="kpi"><div class="kpi-label">配合飼料価格（現行）</div>
-      <div class="kpi-value orange">${latestFeed?.feedPrice?.toLocaleString()||'—'}<small style="font-size:.8rem">円/t</small></div>
-      <div class="kpi-sub">${latestFeed?.quarter||''}期</div>
+    <div class="kpi"><div class="kpi-label">🌾 最新 配合飼料価格</div>
+      <div class="kpi-value orange">${latestFeed?.feedPrice?.toLocaleString()||'—'}<small style="font-size:.8rem"> 円/t</small></div>
+      <div class="kpi-sub">${latestFeed?.yearMonth||''} ${latestFeed?.quarter||''}</div>
     </div>
-    <div class="kpi"><div class="kpi-label">USD/JPY（直近）</div>
-      <div class="kpi-value cyan">${latestFx?.usdjpy||'—'}</div>
-      <div class="kpi-sub">${latestFx?.yearMonth||''}</div>
+    <div class="kpi"><div class="kpi-label">💴 最新 USD/JPY</div>
+      <div class="kpi-value green">${latestFx?.usdjpy||'—'}<small style="font-size:.9rem"> 円</small></div>
+      <div class="kpi-sub">月末終値</div>
     </div>`;
 
   const labels  = data.map(m=>m.yearMonth.slice(2));
@@ -321,38 +321,119 @@ function renderMonthly() {
   const feeds   = data.map(m=>{ const f=MONTHLY.find(x=>x.yearMonth===m.yearMonth); return f?.feedPrice||null; });
   const fxs     = data.map(m=>{ const f=MONTHLY.find(x=>x.yearMonth===m.yearMonth); return f?.usdjpy||null; });
 
+  // 飼料価格をステップ状に展開（四半期単位で階段表示）
+  const feedStep = data.map((m,i) => {
+    // 同じ四半期内は同じ値を維持
+    for (let j = i; j >= 0; j--) {
+      if (MONTHLY[j] && MONTHLY[j].feedPrice) return MONTHLY[j].feedPrice;
+    }
+    return null;
+  });
+
   if (chartMonthly) chartMonthly.destroy();
   chartMonthly = new Chart(document.getElementById('chart-monthly'), {
     data: {
       labels,
       datasets: [
         {
-          type: 'line', label: '市場価格(円/kg)', data: mps,
-          borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)',
-          borderWidth: 2.5, pointRadius: 4, yAxisID: 'y', fill: true, tension: 0.3,
-          order: 1
+          type: 'line',
+          label: '市場価格(円/kg)',
+          data: mps,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37,99,235,0.15)',
+          borderWidth: 2.5,
+          pointRadius: 5,
+          pointBackgroundColor: '#2563eb',
+          fill: true,
+          tension: 0.3,
+          yAxisID: 'y',
+          order: 1,
         },
         {
-          type: 'bar', label: '飼料価格(円/t)', data: feeds,
-          backgroundColor: 'rgba(234,88,12,0.15)', borderColor: '#ea580c',
-          borderWidth: 1, yAxisID: 'y2', order: 3
+          type: 'line',
+          label: '飼料価格(千円/t)',
+          data: feedStep,
+          borderColor: '#ea580c',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          stepped: true,
+          yAxisID: 'y2',
+          order: 2,
         },
         {
-          type: 'line', label: 'USD/JPY', data: fxs,
-          borderColor: '#0891b2', borderWidth: 1.5, borderDash: [4,3],
-          pointRadius: 2, yAxisID: 'y3', fill: false, tension: 0.3, order: 2
+          type: 'line',
+          label: 'USD/JPY(円)',
+          data: fxs,
+          borderColor: '#16a34a',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#16a34a',
+          fill: false,
+          tension: 0.3,
+          yAxisID: 'y3',
+          order: 3,
         }
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#374151', font: {size:11} } } },
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: '#374151', font: { size: 11 }, padding: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              if (ctx.dataset.label.includes('飼料')) return ` 飼料: ${ctx.parsed.y?.toLocaleString()}円/t`;
+              if (ctx.dataset.label.includes('USD')) return ` USD/JPY: ${ctx.parsed.y}円`;
+              return ` 市場価格: ${ctx.parsed.y}円/kg`;
+            }
+          }
+        }
+      },
       scales: {
-        y:  { position:'left',  grid:{color:'#f3f4f6'}, ticks:{color:'#2563eb',font:{size:10}}, title:{display:true,text:'市場価格(円/kg)',color:'#2563eb',font:{size:10}} },
-        y2: { position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#ea580c',font:{size:10}}, title:{display:true,text:'飼料(円/t)',color:'#ea580c',font:{size:10}} },
-        y3: { position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#0891b2',font:{size:10}}, title:{display:true,text:'USD/JPY',color:'#0891b2',font:{size:10}},
-              suggestedMin:130, suggestedMax:170 },
-        x:  { grid:{display:false}, ticks:{color:'#6b7280',font:{size:10}} }
+        y: {
+          position: 'left',
+          grid: { color: '#f3f4f6' },
+          ticks: {
+            color: '#2563eb',
+            font: { size: 10 },
+            callback: v => v + '円'
+          },
+          title: { display: false },
+        },
+        y2: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            color: '#ea580c',
+            font: { size: 10 },
+            callback: v => Math.round(v/1000) + 'k'
+          },
+          title: { display: false },
+        },
+        y3: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          suggestedMin: 130,
+          suggestedMax: 170,
+          ticks: {
+            color: '#16a34a',
+            font: { size: 10 },
+            callback: v => v + '円'
+          },
+          title: { display: false },
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6b7280', font: { size: 10 }, maxRotation: 45 }
+        }
       }
     }
   });
