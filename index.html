@@ -303,24 +303,17 @@ function renderMonthly() {
   const latestFx   = [...MONTHLY].reverse().find(m=>m.usdjpy);
 
   document.getElementById('monthly-kpi').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-      <div class="kpi">
-        <div class="kpi-label">🐔 最新 市場価格</div>
-        <div class="kpi-value blue">${latest.marketPrice}<small style="font-size:.85rem">.00 円/kg</small></div>
-        <div class="kpi-sub">${latest.yearMonth} 時点</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">🌾 最新 配合飼料価格</div>
-        <div class="kpi-value orange">${latestFeed?.feedPrice?.toLocaleString()||'—'}<small style="font-size:.8rem"> 円/t</small></div>
-        <div class="kpi-sub">${latestFeed?.yearMonth||''} ${latestFeed?.quarter||''}</div>
-      </div>
+    <div class="kpi"><div class="kpi-label">最新 市場価格</div>
+      <div class="kpi-value blue">${latest.marketPrice}<small style="font-size:.9rem"> 円/kg</small></div>
+      <div class="kpi-sub">${latest.yearMonth} 時点${diff!=null?'　前月比 '+(diff>=0?'<span class="up">+'+diff+'</span>':'<span class="down">'+diff+'</span>')+'円':''}</div>
     </div>
-    <div style="margin-bottom:20px;max-width:calc(50% - 6px);">
-      <div class="kpi">
-        <div class="kpi-label">💴 最新 USD/JPY</div>
-        <div class="kpi-value green">${latestFx?.usdjpy||'—'}<small style="font-size:.9rem"> 円</small></div>
-        <div class="kpi-sub">月末終値</div>
-      </div>
+    <div class="kpi"><div class="kpi-label">最新 配合飼料価格</div>
+      <div class="kpi-value orange">${latestFeed?.feedPrice?.toLocaleString()||'—'}<small style="font-size:.75rem"> 円/t</small></div>
+      <div class="kpi-sub">${latestFeed?.yearMonth||''} ${latestFeed?.quarter||''}</div>
+    </div>
+    <div class="kpi"><div class="kpi-label">最新 USD/JPY</div>
+      <div class="kpi-value green">${latestFx?.usdjpy||'—'}<small style="font-size:.9rem"> 円</small></div>
+      <div class="kpi-sub">月末終値</div>
     </div>`;
 
   const labels  = data.map(m=>m.yearMonth.slice(2));
