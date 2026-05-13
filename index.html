@@ -876,6 +876,14 @@ function renderQSummary() {
     };
   });
 
+  // 全日次MarketPriceからの通し中値（水平ライン用）
+  const allDailyPrices = DAILY.filter(d=>d.marketPrice!=null).map(d=>d.marketPrice).sort((a,b)=>a-b);
+  const _n = allDailyPrices.length;
+  const allDailyMedian = _n === 0 ? null
+    : _n % 2 === 0
+      ? Math.round((allDailyPrices[_n/2-1] + allDailyPrices[_n/2]) / 2)
+      : allDailyPrices[Math.floor(_n/2)];
+
   const allMedianAvg = (() => {
     const vals = qData.map(q=>q.dailyMedianAvg).filter(v=>v!=null);
     if (!vals.length) return null;
@@ -897,9 +905,9 @@ function renderQSummary() {
         <div class="kpi-sub">集計対象</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">日次中値の全期間平均</div>
-        <div class="kpi-value purple">${allMedianAvg??'—'}<small style="font-size:.9rem"> 円/kg</small></div>
-        <div class="kpi-sub">月次日次中値の平均</div>
+        <div class="kpi-label">全日次データ 中値</div>
+        <div class="kpi-value purple">${allDailyMedian??'—'}<small style="font-size:.9rem"> 円/kg</small></div>
+        <div class="kpi-sub">全期間の日次中央値（基準線）</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">最新四半期 月次平均</div>
@@ -1054,6 +1062,19 @@ function renderQSummary() {
           fill: false,
           tension: 0,
           order: 4,
+        },
+        {
+          type: 'line',
+          label: '全期間 日次中値',
+          data: labels.map(() => allDailyMedian),
+          borderColor: '#f59e0b',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [8,4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 5,
         },
       ]
     },
