@@ -121,6 +121,7 @@
       <h2>月次推移：市場価格 × 配合飼料価格 × USD/JPY</h2>
       <p class="sub">市場価格 = INT(日次MarketPriceの月平均)</p>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="btn-monthly-24" onclick="setMonthlyRange(24)" style="padding:5px 16px;border-radius:6px;border:1.5px solid #d1d5db;background:#fff;color:#374151;font-size:0.82rem;font-weight:600;cursor:pointer;">2年</button>
         <button id="btn-monthly-12" onclick="setMonthlyRange(12)" style="padding:5px 16px;border-radius:6px;border:1.5px solid #2563eb;background:#2563eb;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;">1年</button>
         <button id="btn-monthly-6" onclick="setMonthlyRange(6)" style="padding:5px 16px;border-radius:6px;border:1.5px solid #d1d5db;background:#fff;color:#374151;font-size:0.82rem;font-weight:600;cursor:pointer;">6ヶ月</button>
       </div>
@@ -310,12 +311,13 @@ let monthlyRange = 12; // デフォルト1年
 function setMonthlyRange(n) {
   monthlyRange = n;
   // ボタンのスタイル切替
-  document.getElementById('btn-monthly-12').style.background = n===12 ? '#2563eb' : '#fff';
-  document.getElementById('btn-monthly-12').style.color = n===12 ? '#fff' : '#374151';
-  document.getElementById('btn-monthly-12').style.borderColor = n===12 ? '#2563eb' : '#d1d5db';
-  document.getElementById('btn-monthly-6').style.background = n===6 ? '#2563eb' : '#fff';
-  document.getElementById('btn-monthly-6').style.color = n===6 ? '#fff' : '#374151';
-  document.getElementById('btn-monthly-6').style.borderColor = n===6 ? '#2563eb' : '#d1d5db';
+  [24, 12, 6].forEach(v => {
+    const btn = document.getElementById('btn-monthly-' + v);
+    if (!btn) return;
+    btn.style.background = n===v ? '#2563eb' : '#fff';
+    btn.style.color = n===v ? '#fff' : '#374151';
+    btn.style.borderColor = n===v ? '#2563eb' : '#d1d5db';
+  });
   renderMonthly();
 }
 
