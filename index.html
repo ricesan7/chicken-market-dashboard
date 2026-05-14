@@ -357,10 +357,12 @@ function renderMonthly() {
     : mpSorted[Math.floor(mpSorted.length/2)];
 
   // 飼料価格をステップ状に展開（四半期単位で階段表示）
-  const feedStep = data.map((m,i) => {
-    // 同じ四半期内は同じ値を維持
-    for (let j = i; j >= 0; j--) {
-      if (MONTHLY[j] && MONTHLY[j].feedPrice) return MONTHLY[j].feedPrice;
+  // data は期間でスライスされているため、MONTHLY全体から正しいインデックスを取得する
+  const feedStep = data.map((m) => {
+    // まず data 内（表示期間）で同月以前の feedPrice を逆引き
+    const idxInAll = allData.findIndex(x => x.yearMonth === m.yearMonth);
+    for (let j = idxInAll; j >= 0; j--) {
+      if (allData[j] && allData[j].feedPrice) return allData[j].feedPrice;
     }
     return null;
   });
