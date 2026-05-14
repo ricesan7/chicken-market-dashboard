@@ -302,9 +302,11 @@ function renderDaily(ym) {
 
 // ── 月次タブ ──────────────────────────────────
 function renderMonthly() {
-  const data = MONTHLY.filter(m=>m.marketPrice!=null);
-  const latest = data[data.length-1];
-  const prev   = data[data.length-2];
+  const allData = MONTHLY.filter(m=>m.marketPrice!=null);
+  // グラフは過去6ヶ月のみ表示
+  const data = allData.slice(-6);
+  const latest = allData[allData.length-1];
+  const prev   = allData[allData.length-2];
   const diff   = prev ? latest.marketPrice - prev.marketPrice : null;
   const latestFeed = [...MONTHLY].reverse().find(m=>m.feedPrice);
   const latestFx   = [...MONTHLY].reverse().find(m=>m.usdjpy);
