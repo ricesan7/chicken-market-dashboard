@@ -271,43 +271,57 @@
       "date": "2026/04/28",
       "dayOfWeek": "Tue",
       "yearMonth": "2026/04",
-      "momoLow": 740,
-      "momoWeighted": 838,
-      "momoHigh": 1008,
-      "momoVolume": 148,
-      "muneLow": 440,
-      "muneWeighted": 489,
-      "muneHigh": 658,
-      "muneVolume": 134,
+      "momoLow": 749,
+      "momoWeighted": 839,
+      "momoHigh": 1014,
+      "momoVolume": 162,
+      "muneLow": 428,
+      "muneWeighted": 484,
+      "muneHigh": 696,
+      "muneVolume": 189,
+      "marketPrice": 217
+    },
+    {
+      "date": "2026/04/30",
+      "dayOfWeek": "Thu",
+      "yearMonth": "2026/04",
+      "momoLow": 737,
+      "momoWeighted": 836,
+      "momoHigh": 1021,
+      "momoVolume": 171,
+      "muneLow": 446,
+      "muneWeighted": 488,
+      "muneHigh": 656,
+      "muneVolume": 162,
       "marketPrice": 217
     },
     {
       "date": "2026/05/01",
       "dayOfWeek": "Fri",
       "yearMonth": "2026/05",
-      "momoLow": 727,
-      "momoWeighted": 832,
-      "momoHigh": 1001,
-      "momoVolume": 148,
+      "momoLow": 762,
+      "momoWeighted": 816,
+      "momoHigh": 1023,
+      "momoVolume": 229,
       "muneLow": 437,
-      "muneWeighted": 483,
-      "muneHigh": 656,
-      "muneVolume": 138,
-      "marketPrice": 215
+      "muneWeighted": 478,
+      "muneHigh": 657,
+      "muneVolume": 231,
+      "marketPrice": 212
     },
     {
       "date": "2026/05/02",
       "dayOfWeek": "Sat",
       "yearMonth": "2026/05",
-      "momoLow": 782,
-      "momoWeighted": 826,
-      "momoHigh": 1003,
+      "momoLow": 786,
+      "momoWeighted": 841,
+      "momoHigh": 989,
       "momoVolume": null,
       "muneLow": 445,
-      "muneWeighted": 476,
-      "muneHigh": 645,
+      "muneWeighted": 481,
+      "muneHigh": 636,
       "muneVolume": null,
-      "marketPrice": 213
+      "marketPrice": 217
     },
     {
       "date": "2026/05/07",
@@ -586,5 +600,5 @@
       "notes": "令和8年1〜3月期比+1,250円。2期連続値上げ。円安継続・海上運賃上昇"
     }
   ],
-  "fetchedAt": "2026/05/14 09:06 JST"
+  "fetchedAt": "2026/05/14 10:13 JST"
 }
