@@ -980,7 +980,7 @@ function renderQSummary() {
           <th>差（中値−平均）</th>
         </tr></thead>
         <tbody>
-          ${qData.map(q => {
+          ${qDataChart.map(q => {
             return q.dailyMedians.map(dm => {
               const mData = monthly.find(m=>m.yearMonth===dm.ym);
               const mAvg = mData?.marketPrice ?? '—';
@@ -1012,7 +1012,7 @@ function renderQSummary() {
           <th class="green">USD/JPY</th>
         </tr></thead>
         <tbody>
-          ${qData.map((q,i) => {
+          ${qDataChart.map((q,i) => {
             return `<tr>
               <td style="font-weight:600">${q.label}</td>
               <td class="blue" style="font-weight:700">${q.avg}</td>
@@ -1030,7 +1030,7 @@ function renderQSummary() {
     <!-- 飼料価格変動メモ -->
     <div class="card">
       <h2>飼料価格 改定履歴</h2>
-      ${qData.filter(q=>q.notes).map(q=>`
+      ${qDataChart.filter(q=>q.notes).map(q=>`
         <div class="ai-insight ${q.feedChange>0?'alert':q.feedChange<0?'ok':''}">
           <strong>${q.label}（${q.year}年${q.quarter}）</strong>
           飼料: ${q.feedPrice?.toLocaleString()}円/t
