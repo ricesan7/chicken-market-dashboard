@@ -920,7 +920,7 @@ function renderQSummary() {
   })();
 
   // グラフは2025Q2以降の直近4四半期のみ表示
-  const qDataChart = qData.filter(q => !(q.year==='2025' && q.quarter==='Q1')).slice(-4);
+  const qDataChart = qData.filter(q => !(String(q.year)==='2025' && q.quarter==='Q1')).slice(-4);
   const labels = qDataChart.map(q=>q.label);
   const avgs   = qDataChart.map(q=>q.avg);
   const dMedians = qDataChart.map(q=>q.dailyMedianAvg);
@@ -940,7 +940,7 @@ function renderQSummary() {
     <div class="kpi-grid" style="margin-bottom:16px;">
       <div class="kpi">
         <div class="kpi-label">四半期数</div>
-        <div class="kpi-value blue">${qData.length}<small style="font-size:.9rem"> 期</small></div>
+        <div class="kpi-value blue">${qDataChart.length}<small style="font-size:.9rem"> 期</small></div>
         <div class="kpi-sub">集計対象</div>
       </div>
       <div class="kpi">
