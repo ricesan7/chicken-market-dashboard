@@ -919,8 +919,8 @@ function renderQSummary() {
     return Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
   })();
 
-  // グラフは直近4四半期のみ表示
-  const qDataChart = qData.slice(-4);
+  // グラフは2025Q2以降の直近4四半期のみ表示
+  const qDataChart = qData.filter(q => !(q.year==='2025' && q.quarter==='Q1')).slice(-4);
   const labels = qDataChart.map(q=>q.label);
   const avgs   = qDataChart.map(q=>q.avg);
   const dMedians = qDataChart.map(q=>q.dailyMedianAvg);
