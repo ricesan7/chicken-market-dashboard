@@ -644,6 +644,20 @@
       "muneHigh": 666.0,
       "muneVolume": 170.0,
       "marketPrice": 215
+    },
+    {
+      "date": "2026/06/11",
+      "dayOfWeek": "Thu",
+      "yearMonth": "2026/06",
+      "momoLow": 728.0,
+      "momoWeighted": 831.0,
+      "momoHigh": 988.0,
+      "momoVolume": 181.0,
+      "muneLow": 436.0,
+      "muneWeighted": 481.0,
+      "muneHigh": 687.0,
+      "muneVolume": 168.0,
+      "marketPrice": 215
     }
   ],
   "monthly": [
@@ -852,5 +866,5 @@
       "notes": "令和8年1〜3月期比+1,250円。2期連続値上げ。円安継続・海上運賃上昇"
     }
   ],
-  "fetchedAt": "2026/06/12 08:31 JST"
+  "fetchedAt": "2026/06/12 13:01 JST"
 }
