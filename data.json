@@ -1029,9 +1029,9 @@
       "period": "1〜3月期",
       "pricePerTon": 97108.0,
       "changeFromPrev": 2750.0,
-      "usdjpyAvg": 152.57,
-      "usdjpyHigh": 158.24,
-      "usdjpyLow": 147.07,
+      "usdjpyAvg": 151.24,
+      "usdjpyHigh": 154.1,
+      "usdjpyLow": 149.62,
       "notes": "令和6年10〜12月期比+2,750円。円安・とうもろこし上昇が要因"
     },
     {
@@ -1040,9 +1040,9 @@
       "period": "4〜6月期",
       "pricePerTon": 96708.0,
       "changeFromPrev": -400.0,
-      "usdjpyAvg": 144.64,
-      "usdjpyHigh": 149.91,
-      "usdjpyLow": 140.88,
+      "usdjpyAvg": 143.62,
+      "usdjpyHigh": 144.52,
+      "usdjpyLow": 142.3,
       "notes": "令和7年1〜3月期比-400円。円高・大豆粕・海上運賃下落が要因"
     },
     {
@@ -1051,9 +1051,9 @@
       "period": "7〜9月期",
       "pricePerTon": 94508.0,
       "changeFromPrev": -2200.0,
-      "usdjpyAvg": 147.4,
-      "usdjpyHigh": 150.77,
-      "usdjpyLow": 143.4,
+      "usdjpyAvg": 148.28,
+      "usdjpyHigh": 149.23,
+      "usdjpyLow": 147.02,
       "notes": "令和7年4〜6月期比-2,200円。円高・とうもろこし・大豆粕下落が要因"
     },
     {
@@ -1062,9 +1062,9 @@
       "period": "10〜12月期",
       "pricePerTon": 93958.0,
       "changeFromPrev": -550.0,
-      "usdjpyAvg": 154.02,
-      "usdjpyHigh": 157.68,
-      "usdjpyLow": 147.08,
+      "usdjpyAvg": 155.49,
+      "usdjpyHigh": 156.41,
+      "usdjpyLow": 153.9,
       "notes": "令和7年7〜9月期比-550円。3期連続値下げ。とうもろこし・大豆粕下落が要因"
     },
     {
@@ -1073,9 +1073,9 @@
       "period": "1〜3月期",
       "pricePerTon": 98158.0,
       "changeFromPrev": 4200.0,
-      "usdjpyAvg": 156.86,
-      "usdjpyHigh": 160.23,
-      "usdjpyLow": 152.45,
+      "usdjpyAvg": 156.81,
+      "usdjpyHigh": 159.84,
+      "usdjpyLow": 154.74,
       "notes": "令和7年10〜12月期比+4,200円。4期ぶり値上げ。円安・大豆粕上昇が要因"
     },
     {
@@ -1084,11 +1084,22 @@
       "period": "4〜6月期",
       "pricePerTon": 99408.0,
       "changeFromPrev": 1250.0,
-      "usdjpyAvg": 158.77,
+      "usdjpyAvg": 158.4,
       "usdjpyHigh": 160.18,
-      "usdjpyLow": 156.51,
+      "usdjpyLow": 156.62,
       "notes": "令和8年1〜3月期比+1,250円。2期連続値上げ。円安継続・海上運賃上昇"
+    },
+    {
+      "year": "2026",
+      "quarter": "Q3",
+      "period": "7〜9月期",
+      "pricePerTon": 103108.0,
+      "changeFromPrev": 3700.0,
+      "usdjpyAvg": null,
+      "usdjpyHigh": null,
+      "usdjpyLow": null,
+      "notes": "令和8年7〜9月期比+3,700円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/07/06 08:31 JST"
+  "fetchedAt": "2026/07/06 08:50 JST"
 }
