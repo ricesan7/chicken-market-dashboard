@@ -1484,6 +1484,20 @@
       "muneHigh": 650.0,
       "muneVolume": 150.0,
       "marketPrice": 211
+    },
+    {
+      "date": "2026/09/11",
+      "dayOfWeek": "Fri",
+      "yearMonth": "2026/09",
+      "momoLow": 771.0,
+      "momoWeighted": 827.0,
+      "momoHigh": 990.0,
+      "momoVolume": 175.0,
+      "muneLow": 417.0,
+      "muneWeighted": 465.0,
+      "muneHigh": 647.0,
+      "muneVolume": 173.0,
+      "marketPrice": 212
     }
   ],
   "monthly": [
@@ -1703,5 +1717,5 @@
       "notes": "令和8年7〜9月期比+3,700円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/09/12 08:34 JST"
+  "fetchedAt": "2026/09/12 13:00 JST"
 }
