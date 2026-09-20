@@ -1785,7 +1785,18 @@
       "usdjpyHigh": null,
       "usdjpyLow": null,
       "notes": "令和8年7〜9月期比+3,700円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
+    },
+    {
+      "year": "2026",
+      "quarter": "Q4",
+      "period": "10〜12月期",
+      "pricePerTon": 106308.0,
+      "changeFromPrev": 3200.0,
+      "usdjpyAvg": null,
+      "usdjpyHigh": null,
+      "usdjpyLow": null,
+      "notes": "令和8年10〜12月期比+3,200円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/09/20 08:34 JST"
+  "fetchedAt": "2026/09/20 09:02 JST"
 }
