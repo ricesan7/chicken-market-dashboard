@@ -1816,9 +1816,9 @@
       "period": "4〜6月期",
       "pricePerTon": 99408.0,
       "changeFromPrev": 1250.0,
-      "usdjpyAvg": 158.4,
-      "usdjpyHigh": 160.18,
-      "usdjpyLow": 156.62,
+      "usdjpyAvg": 160.46,
+      "usdjpyHigh": 161.92,
+      "usdjpyLow": 159.27,
       "notes": "令和8年1〜3月期比+1,250円。2期連続値上げ。円安継続・海上運賃上昇"
     },
     {
@@ -1827,9 +1827,9 @@
       "period": "7〜9月期",
       "pricePerTon": 103108.0,
       "changeFromPrev": 3700.0,
-      "usdjpyAvg": null,
-      "usdjpyHigh": null,
-      "usdjpyLow": null,
+      "usdjpyAvg": 159.22,
+      "usdjpyHigh": 160.18,
+      "usdjpyLow": 157.37,
       "notes": "令和8年7〜9月期比+3,700円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     },
     {
@@ -1844,5 +1844,5 @@
       "notes": "令和8年10〜12月期比+3,200円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/09/23 08:20 JST"
+  "fetchedAt": "2026/09/23 08:27 JST"
 }
