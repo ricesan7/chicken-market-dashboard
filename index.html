@@ -600,11 +600,12 @@ function renderAI() {
 
   // 為替・飼料リスク
   const latestFx   = [...MONTHLY].reverse().find(m=>m.usdjpy);
-  const usdRate    = latestFx?.usdjpy||0;
+  const fxCurrent  = latestFx?.yearMonth === latest.yearMonth;
+  const usdRate    = fxCurrent ? latestFx.usdjpy : null;
   const lastQs     = QUARTERLY.slice(-3);
   const risingCnt  = lastQs.filter(q=>q.changeFromPrev>0).length;
-  const fxRisk     = Math.min(100,Math.max(0,Math.round((usdRate-140)/(170-140)*100)));
-  const feedRisk   = Math.min(100, risingCnt*33+(fxRisk>70?20:0));
+  const fxRisk     = fxCurrent ? Math.min(100,Math.max(0,Math.round((usdRate-140)/(170-140)*100))) : null;
+  const feedRisk   = Math.min(100, risingCnt*33+(fxRisk!=null&&fxRisk>70?20:0));
 
   // 相関
   const corrData = valid.filter(m=>m.usdjpy&&m.feedPrice);
@@ -626,11 +627,13 @@ function renderAI() {
     ? `直近3ヶ月で月あたり約${Math.abs(slope.toFixed(1))}円の下落傾向にあります。需給改善または円高方向への転換が影響している可能性があります。`
     : `直近3ヶ月は安定した推移（月あたり変動±${Math.abs(slope.toFixed(1))}円以内）を示しています。飼料コストと需要のバランスが均衡している状況です。`;
 
-  let fxComment = usdRate>=155
-    ? `現在 ${usdRate}円/ドルと高水準。過去データでは155円超が翌四半期の飼料値上げと相関しており、次期改定での上昇リスクが高まっています。`
+  let fxComment = !fxCurrent
+    ? `最新の為替データは${latestFx?.yearMonth||"未取得"}時点です。${latest.yearMonth}の為替リスク判定は保留します。`
+    : usdRate>=155
+    ? `${latest.yearMonth}の暫定値 ${usdRate}円/ドルと高水準。過去データでは155円超が翌四半期の飼料値上げと相関しており、次期改定での上昇リスクが高まっています。`
     : usdRate>=150
-    ? `${usdRate}円/ドルと150円台。急激な円安への転換に注意が必要ですが、現時点では緊急性は限定的です。`
-    : `${usdRate}円/ドルと比較的円高水準。飼料輸入コストへの圧力は緩和されており、次期飼料価格は横ばいまたは下落が期待されます。`;
+    ? `${latest.yearMonth}の暫定値 ${usdRate}円/ドルと150円台。急激な円安への転換に注意が必要ですが、現時点では緊急性は限定的です。`
+    : `${latest.yearMonth}の暫定値 ${usdRate}円/ドルと比較的円高水準。飼料輸入コストへの圧力は緩和されており、次期飼料価格は横ばいまたは下落が期待されます。`;
 
   document.getElementById('ai-content').innerHTML = `
     <!-- トレンド -->
@@ -665,14 +668,14 @@ function renderAI() {
     <div class="ai-card">
       <div class="ai-card-title">🌾 飼料コストリスク評価 <span class="ai-badge ${feedRisk>=60?'badge-up':feedRisk>=30?'badge-warn':'badge-down'}">${feedRisk>=60?'高リスク':feedRisk>=30?'中リスク':'低リスク'}</span></div>
       <div class="risk-bar-wrap">
-        <div class="risk-bar-label"><span>為替リスク（USD/JPY=${usdRate}）</span><span>${fxRisk}%</span></div>
-        <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${fxRisk}%;background:${fxRisk>=70?'#dc2626':fxRisk>=50?'#f59e0b':'#16a34a'}"></div></div>
+        <div class="risk-bar-label"><span>為替リスク（${fxCurrent?`USD/JPY=${usdRate}・当月暫定`:"今月のデータ未取得"}）</span><span>${fxRisk==null?"未判定":`${fxRisk}%`}</span></div>
+        <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${fxRisk||0}%;background:${fxRisk>=70?'#dc2626':fxRisk>=50?'#f59e0b':'#16a34a'}"></div></div>
       </div>
       <div class="risk-bar-wrap">
         <div class="risk-bar-label"><span>飼料値上げリスク（直近${lastQs.length}四半期）</span><span>${feedRisk}%</span></div>
         <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${feedRisk}%;background:${feedRisk>=60?'#dc2626':feedRisk>=30?'#f59e0b':'#16a34a'}"></div></div>
       </div>
-      <div class="ai-insight" style="margin-top:10px;"><strong>為替：</strong> ${fxComment}</div>
+      <div class="ai-insight" style="margin-top:10px;"><strong>為替：</strong> ${fxComment} 当月は直近の確定済み日次終値、過去月は月末終値を使用。</div>
       <div class="ai-insight ${risingCnt>=2?'alert':'ok'}"><strong>飼料改定履歴：</strong> 直近${lastQs.length}四半期のうち${risingCnt}期が値上げ。
         ${lastQs.map(q=>`${q.year}/${q.quarter}: ${q.changeFromPrev>=0?'+':''}${(q.changeFromPrev||0).toLocaleString()}円`).join(' → ')}</div>
     </div>
@@ -702,7 +705,7 @@ function renderAI() {
       ${slope>2?`<div class="ai-insight alert">📌 <strong>価格上昇局面：</strong> 相場が上昇中のため、早期の仕入価格交渉・ロック検討を推奨します。</div>`
         :slope<-2?`<div class="ai-insight ok">📌 <strong>価格下落局面：</strong> スポット仕入れのタイミングとして有利な局面です。</div>`
         :`<div class="ai-insight">📌 <strong>安定局面：</strong> 通常の仕入れサイクルを維持しながら、飼料改定情報を注視してください。</div>`}
-      ${usdRate>=155?`<div class="ai-insight warn">⚠️ <strong>為替警戒：</strong> USD/JPY ${usdRate}円と高水準。次期飼料改定での値上げリスクを想定した対応を推奨します。</div>`:''}
+      ${fxCurrent&&usdRate>=155?`<div class="ai-insight warn">⚠️ <strong>為替警戒：</strong> USD/JPY ${usdRate}円と高水準。次期飼料改定での値上げリスクを想定した対応を推奨します。</div>`:''}
       ${risingCnt>=2?`<div class="ai-insight warn">⚠️ <strong>飼料連続値上げ：</strong> ${risingCnt}期連続の値上げ改定。コスト転嫁の交渉根拠として活用できます。</div>`:''}
       <div class="ai-insight ok">✅ <strong>データ更新：</strong> 毎日 8:30 JST に自動更新されます。</div>
     </div>`;
