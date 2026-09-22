@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "forecasts": [
+    {
+      "issueMonth": "2026/09",
+      "issuedAt": "2026-09-23T08:47:00+09:00",
+      "baseMonth": "2026/09",
+      "basePrice": 210.0,
+      "baseProvisional": true,
+      "model": "three_month_linear_trend_v1",
+      "points": [
+        {
+          "month": "2026/10",
+          "value": 210,
+          "range": 5
+        },
+        {
+          "month": "2026/11",
+          "value": 209,
+          "range": 7
+        },
+        {
+          "month": "2026/12",
+          "value": 209,
+          "range": 8
+        }
+      ]
+    }
+  ]
+}
