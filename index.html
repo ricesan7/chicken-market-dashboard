@@ -163,9 +163,10 @@
 
 <script>
 const DAY_JA = {Mon:'月',Tue:'火',Wed:'水',Thu:'木',Fri:'金',Sat:'土',Sun:'日'};
-let DAILY=[], MONTHLY=[], QUARTERLY=[];
+let DAILY=[], MONTHLY=[], QUARTERLY=[], FORECASTS=[];
+let selectedForecastIssue=null, dataAsOfMonth='';
 let currentMonth='';
-let chartDailyMp=null, chartDailySub=null, chartMonthly=null, chartQuarterly=null, chartForecast=null, chartQBar=null, chartQLine=null;
+let chartDailyMp=null, chartDailySub=null, chartMonthly=null, chartQuarterly=null, chartForecast=null, chartActualDaily=null, chartQBar=null, chartQLine=null;
 
 // ── データ読み込み ──────────────────────────────
 async function loadData() {
@@ -176,6 +177,16 @@ async function loadData() {
     DAILY     = (d.daily||[]).map(r => ({...r, marketPrice: Math.floor((r.momoWeighted*0.55+r.muneWeighted*0.45)*0.32)}));
     MONTHLY   = d.monthly||[];
     QUARTERLY = d.quarterly||[];
+    dataAsOfMonth = (d.fetchedAt||'').slice(0,7);
+    try {
+      const hr = await fetch('https://ricesan7.github.io/chicken-market-dashboard/forecast_history.json?_='+Date.now());
+      if (!hr.ok) throw new Error('予測履歴を取得できません');
+      const history = await hr.json();
+      FORECASTS = Array.isArray(history.forecasts) ? history.forecasts : [];
+    } catch(e) { FORECASTS = []; }
+    if (!FORECASTS.some(f=>f.issueMonth===selectedForecastIssue)) {
+      selectedForecastIssue = FORECASTS.length ? FORECASTS[FORECASTS.length-1].issueMonth : null;
+    }
     document.getElementById('updated-at').textContent = '最終更新: ' + (d.fetchedAt||'');
     const months = [...new Set(DAILY.map(r=>r.yearMonth))].sort();
     currentMonth = months[months.length-1];
@@ -635,6 +646,14 @@ function renderAI() {
     ? `${latest.yearMonth}の暫定値 ${usdRate}円/ドルと150円台。急激な円安への転換に注意が必要ですが、現時点では緊急性は限定的です。`
     : `${latest.yearMonth}の暫定値 ${usdRate}円/ドルと比較的円高水準。飼料輸入コストへの圧力は緩和されており、次期飼料価格は横ばいまたは下落が期待されます。`;
 
+  // 発行時点の予測を固定して表示。履歴が読めない場合だけ現在の計算値を暫定表示。
+  const saved = FORECASTS.find(f=>f.issueMonth===selectedForecastIssue);
+  const forecastPoints = saved?.points || [0,1,2].map(i=>({month:addMo(latest.yearMonth,i+1),value:pred[i],range:conf[i]}));
+  const sourceBaseMonth = saved?.baseMonth || latest.yearMonth;
+  const sourceBasePrice = saved?.basePrice ?? latest.marketPrice;
+  const actualByMonth = new Map(valid.map(m=>[m.yearMonth,m.marketPrice]));
+  const forecastChoices = FORECASTS.map(f=>`<option value="${f.issueMonth}" ${f.issueMonth===selectedForecastIssue?'selected':''}>${f.issueMonth}発行（基点 ${f.baseMonth}${f.baseProvisional?'・暫定':''}）</option>`).join('');
+
   document.getElementById('ai-content').innerHTML = `
     <!-- トレンド -->
     <div class="ai-card">
@@ -649,19 +668,29 @@ function renderAI() {
       ${dayMin!=null?`<div class="ai-insight ok"><strong>${latest.yearMonth} 日次レンジ：</strong> ${dayMin}円 〜 ${dayMax}円（幅 ${dayMax-dayMin}円）</div>`:''}
     </div>
 
-    <!-- 予測 -->
+    <!-- 予測と実績 -->
     <div class="ai-card">
-      <div class="ai-card-title">🔮 翌3ヶ月 価格予測 <span class="ai-badge badge-stable">線形モデル</span></div>
-      <div class="ai-insight warn">⚠️ 過去データの線形トレンドに基づく統計的推計です。実際の相場は需給・気候・円相場等により変動します。</div>
-      <div class="chart-wrap" style="height:260px;margin-bottom:14px;"><canvas id="chart-forecast"></canvas></div>
+      <div class="ai-card-title">🔮 予測と月次実績 <span class="ai-badge badge-stable">線形モデル</span></div>
+      ${saved?`<div class="ai-insight">${saved.issuedAt.slice(0,10)}発行の予測を固定表示。基点は${saved.baseMonth}${saved.baseProvisional?'（発行時点の暫定月）':''}です。実績が出ても予測値は変更しません。</div>`:
+        '<div class="ai-insight warn">予測履歴を読み込めません。下の予測は現在のデータから再計算した値で、保存済み予測ではありません。</div>'}
+      ${FORECASTS.length?`<label for="forecast-issue" style="display:block;margin:10px 0;font-size:13px">比較する過去の予測：
+        <select id="forecast-issue" onchange="selectForecastIssue(this.value)" style="margin-left:8px;max-width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:5px">${forecastChoices}</select></label>`:''}
+      <div class="ai-insight warn">⚠️ 直近3ヶ月の傾きを延長した参考予測です。為替・飼料は予測式に含まず、「±」は検証済みの信頼区間ではありません。</div>
+      <div class="chart-wrap" style="height:280px;margin-bottom:14px;"><canvas id="chart-forecast"></canvas></div>
       <div class="forecast-grid">
-        ${[0,1,2].map(i=>`<div class="forecast-item">
-          <div class="forecast-month">${addMo(latest.yearMonth,i+1)}（予測）</div>
-          <div class="forecast-value">${pred[i]}</div>
-          <div class="forecast-range">±${conf[i]}円の幅</div>
-        </div>`).join('')}
+        ${forecastPoints.map(p=>{const actual=actualByMonth.get(p.month); const diff=actual==null?null:actual-p.value;
+          return `<div class="forecast-item">
+            <div class="forecast-month">${p.month}（予測）</div>
+            <div class="forecast-value">${p.value}円</div>
+            <div class="forecast-range">参考幅 ±${p.range}円</div>
+            <div class="forecast-range">${actual==null?'実績待ち':`${p.month===dataAsOfMonth?'暫定実績':'確定実績'} ${actual}円（予測差 ${diff>=0?'+':''}${diff}円）`}</div>
+          </div>`;}).join('')}
       </div>
-      <div class="ai-insight"><strong>モデル根拠：</strong> 直近3ヶ月の線形回帰スロープ（月あたり${slope.toFixed(1)}円）／ 過去${allMPs.length}ヶ月の標準偏差 ${std.toFixed(1)}円 を信頼区間に使用</div>
+      <div class="ai-insight">実績線は毎日の取得結果から月次平均を更新します。進行中の月は暫定値、終了した月は確定値です。</div>
+    </div>
+    <div class="ai-card">
+      <div class="ai-card-title">📅 実際の日次値動き <span class="ai-badge badge-stable">直近60件</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-actual-daily"></canvas></div>
     </div>
 
     <!-- 飼料リスク -->
@@ -710,134 +739,55 @@ function renderAI() {
       <div class="ai-insight ok">✅ <strong>データ更新：</strong> 毎日 8:30 JST に自動更新されます。</div>
     </div>`;
 
-  // ── 予測グラフ描画 ──────────────────────────
-  // 過去6ヶ月の実績 + 現在 + 予測3ヶ月
-  const histN = Math.min(6, valid.length);
-  const histData = valid.slice(-histN);
-  const histLabels = histData.map(m=>m.yearMonth.slice(2));
-  const histValues = histData.map(m=>m.marketPrice);
-
-  const predLabels = [0,1,2].map(i=>addMo(latest.yearMonth,i+1).slice(2));
-  const predValues = pred;
-  const upperBand  = pred.map((v,i)=>v+conf[i]);
-  const lowerBand  = pred.map((v,i)=>v-conf[i]);
-
-  // 実績ラインの最後と予測ラインの最初をつなぐ接続点
-  const allLabels = [...histLabels, ...predLabels];
-
-  // 実績データ（予測部分はnull）
-  const actualLine = [...histValues, null, null, null];
-  // 予測データ（実績最後の点から始める）
-  const predLine   = [...Array(histN-1).fill(null), latest.marketPrice, ...predValues];
-  // 信頼区間上限（予測部分のみ）
-  const upperLine  = [...Array(histN-1).fill(null), latest.marketPrice, ...upperBand];
-  // 信頼区間下限（予測部分のみ）
-  const lowerLine  = [...Array(histN-1).fill(null), latest.marketPrice, ...lowerBand];
+  // 選択した発行時点の予測と、その後に出た月次実績を同じ月軸に重ねる。
+  const anchorIdx = Math.max(0,valid.findIndex(m=>m.yearMonth===sourceBaseMonth));
+  const firstMonth = valid[Math.max(0,anchorIdx-5)].yearMonth;
+  const endMonth = forecastPoints[forecastPoints.length-1].month;
+  const allMonths=[];
+  for (let m=firstMonth, n=0; m<=endMonth && n<60; m=addMo(m,1),n++) allMonths.push(m);
+  const allLabels=allMonths.map(m=>m.slice(2));
+  const actualLine=allMonths.map(m=>actualByMonth.get(m)??null);
+  const pointByMonth=new Map(forecastPoints.map(p=>[p.month,p]));
+  const predLine=allMonths.map(m=>m===sourceBaseMonth?sourceBasePrice:pointByMonth.get(m)?.value??null);
+  const upperLine=allMonths.map(m=>m===sourceBaseMonth?sourceBasePrice:
+    pointByMonth.has(m)?pointByMonth.get(m).value+pointByMonth.get(m).range:null);
+  const lowerLine=allMonths.map(m=>m===sourceBaseMonth?sourceBasePrice:
+    pointByMonth.has(m)?pointByMonth.get(m).value-pointByMonth.get(m).range:null);
 
   if (chartForecast) chartForecast.destroy();
   chartForecast = new Chart(document.getElementById('chart-forecast'), {
     type: 'line',
-    data: {
-      labels: allLabels,
-      datasets: [
-        {
-          label: '実績',
-          data: actualLine,
-          borderColor: '#2563eb',
-          backgroundColor: 'rgba(37,99,235,0.08)',
-          borderWidth: 2.5,
-          pointRadius: 5,
-          pointBackgroundColor: '#2563eb',
-          fill: false,
-          tension: 0.3,
-          spanGaps: false,
-          order: 1,
-        },
-        {
-          label: '予測',
-          data: predLine,
-          borderColor: '#7c3aed',
-          backgroundColor: 'transparent',
-          borderWidth: 2.5,
-          borderDash: [6, 4],
-          pointRadius: (ctx) => ctx.dataIndex >= histN ? 6 : 0,
-          pointBackgroundColor: '#7c3aed',
-          pointStyle: (ctx) => ctx.dataIndex >= histN ? 'rectRot' : 'circle',
-          fill: false,
-          tension: 0.3,
-          spanGaps: false,
-          order: 2,
-        },
-        {
-          label: '予測上限',
-          data: upperLine,
-          borderColor: 'rgba(124,58,237,0.25)',
-          backgroundColor: 'rgba(124,58,237,0.1)',
-          borderWidth: 1,
-          borderDash: [3, 3],
-          pointRadius: 0,
-          fill: '+1',
-          tension: 0.3,
-          spanGaps: false,
-          order: 3,
-        },
-        {
-          label: '予測下限',
-          data: lowerLine,
-          borderColor: 'rgba(124,58,237,0.25)',
-          backgroundColor: 'rgba(124,58,237,0.1)',
-          borderWidth: 1,
-          borderDash: [3, 3],
-          pointRadius: 0,
-          fill: false,
-          tension: 0.3,
-          spanGaps: false,
-          order: 4,
-        },
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          labels: {
-            color: '#374151',
-            font: { size: 11 },
-            filter: (item) => !['予測上限','予測下限'].includes(item.text),
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              if (ctx.dataset.label === '予測上限' || ctx.dataset.label === '予測下限') return null;
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y}円`;
-            },
-            afterBody: (ctxArr) => {
-              const idx = ctxArr[0]?.dataIndex;
-              if (idx >= histN) {
-                const pi = idx - histN;
-                return [`  信頼区間: ${lowerBand[pi]}〜${upperBand[pi]}円`];
-              }
-              return [];
-            }
-          }
-        },
-        annotation: undefined,
-      },
-      scales: {
-        y: {
-          grid: { color: '#f3f4f6' },
-          ticks: { color: '#6b7280', font: { size: 11 } },
-          title: { display: true, text: '市場価格（円/kg）', color: '#6b7280', font: { size: 10 } },
-        },
-        x: {
-          grid: { display: false },
-          ticks: { color: '#6b7280', font: { size: 11 } },
-        }
-      }
-    }
+    data: {labels:allLabels,datasets:[
+      {label:'実績（月次）',data:actualLine,borderColor:'#2563eb',borderWidth:2.5,pointRadius:5,
+       fill:false,tension:0.25,spanGaps:false},
+      {label:'保存した予測',data:predLine,borderColor:'#7c3aed',borderWidth:2.5,borderDash:[6,4],
+       pointRadius:(ctx)=>pointByMonth.has(allMonths[ctx.dataIndex])?5:0,
+       fill:false,tension:0,spanGaps:false},
+      {label:'参考上限',data:upperLine,borderColor:'rgba(124,58,237,0.25)',borderWidth:1,borderDash:[3,3],
+       pointRadius:0,fill:'+1',spanGaps:false},
+      {label:'参考下限',data:lowerLine,borderColor:'rgba(124,58,237,0.25)',borderWidth:1,borderDash:[3,3],
+       pointRadius:0,fill:false,spanGaps:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#374151',font:{size:11},filter:item=>!['参考上限','参考下限'].includes(item.text)}},
+        tooltip:{callbacks:{label:ctx=>['参考上限','参考下限'].includes(ctx.dataset.label)?null:
+          ` ${ctx.dataset.label}: ${ctx.parsed.y}円${ctx.dataset.label==='実績（月次）'&&allMonths[ctx.dataIndex]===dataAsOfMonth?'（暫定）':''}`,
+          afterBody:items=>{const p=pointByMonth.get(allMonths[items[0]?.dataIndex]);
+            return p?[`参考幅: ${p.value-p.range}〜${p.value+p.range}円`]:[];}}}},
+      scales:{y:{grid:{color:'#f3f4f6'},ticks:{color:'#6b7280'},title:{display:true,text:'市場価格（円/kg）',color:'#6b7280'}},
+              x:{grid:{display:false},ticks:{color:'#6b7280'}}}}
+  });
+
+  const dailyActual=DAILY.filter(r=>r.date&&r.marketPrice!=null).sort((a,b)=>a.date.localeCompare(b.date)).slice(-60);
+  if (chartActualDaily) chartActualDaily.destroy();
+  chartActualDaily = new Chart(document.getElementById('chart-actual-daily'), {
+    type:'line',data:{labels:dailyActual.map(r=>r.date.slice(5)),datasets:[
+      {label:'実際の日次市場価格',data:dailyActual.map(r=>r.marketPrice),borderColor:'#2563eb',
+       backgroundColor:'rgba(37,99,235,0.08)',borderWidth:2,pointRadius:2,fill:false,tension:0.1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{title:items=>dailyActual[items[0].dataIndex].date,label:ctx=>`実績: ${ctx.parsed.y}円/kg`}}},
+      scales:{y:{ticks:{color:'#6b7280'},title:{display:true,text:'円/kg',color:'#6b7280'}},
+              x:{ticks:{color:'#6b7280',maxTicksLimit:9},grid:{display:false}}}}
   });
 }
 
@@ -1128,6 +1078,11 @@ function renderQSummary() {
       }
     }
   });
+}
+
+function selectForecastIssue(issueMonth) {
+  selectedForecastIssue = issueMonth;
+  renderAI();
 }
 
 // 起動
