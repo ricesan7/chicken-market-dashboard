@@ -1765,7 +1765,7 @@
       "marketPrice": 210.0,
       "feedPrice": 103108.0,
       "feedChange": null,
-      "usdjpy": 158.26
+      "usdjpy": 158.81
     }
   ],
   "quarterly": [
@@ -1841,9 +1841,9 @@
       "period": "7〜9月期",
       "pricePerTon": 103108.0,
       "changeFromPrev": 3700.0,
-      "usdjpyAvg": 159.52,
+      "usdjpyAvg": 159.7,
       "usdjpyHigh": 160.18,
-      "usdjpyLow": 158.26,
+      "usdjpyLow": 158.81,
       "notes": "令和8年7〜9月期比+3,700円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     },
     {
@@ -1858,5 +1858,5 @@
       "notes": "令和8年10〜12月期比+3,200円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/09/25 13:03 JST"
+  "fetchedAt": "2026/09/26 08:34 JST"
 }
