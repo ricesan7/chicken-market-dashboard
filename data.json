@@ -1980,7 +1980,7 @@
     {
       "yearMonth": "2026/10",
       "quarter": "Q4",
-      "marketPrice": 213,
+      "marketPrice": 213.0,
       "feedPrice": 106308.0,
       "feedChange": 3200.0,
       "usdjpy": 158.14
@@ -2076,5 +2076,5 @@
       "notes": "令和8年10〜12月期比+3,200円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/10/17 08:35 JST"
+  "fetchedAt": "2026/10/17 13:01 JST"
 }
