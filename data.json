@@ -2095,7 +2095,7 @@
       "marketPrice": 213.0,
       "feedPrice": 106308.0,
       "feedChange": 3200.0,
-      "usdjpy": 157.53
+      "usdjpy": 157.99
     }
   ],
   "quarterly": [
@@ -2182,11 +2182,11 @@
       "period": "10〜12月期",
       "pricePerTon": 106308.0,
       "changeFromPrev": 3200.0,
-      "usdjpyAvg": 157.53,
-      "usdjpyHigh": 157.53,
-      "usdjpyLow": 157.53,
+      "usdjpyAvg": 157.99,
+      "usdjpyHigh": 157.99,
+      "usdjpyLow": 157.99,
       "notes": "令和8年10〜12月期比+3,200円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/10/29 08:35 JST"
+  "fetchedAt": "2026/10/29 13:03 JST"
 }
