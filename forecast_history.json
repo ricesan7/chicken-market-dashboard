@@ -50,6 +50,31 @@
           "range": 8
         }
       ]
+    },
+    {
+      "issueMonth": "2026/11",
+      "issuedAt": "2026-11-01T08:34:47+09:00",
+      "baseMonth": "2026/10",
+      "basePrice": 213.0,
+      "baseProvisional": false,
+      "model": "three_month_linear_trend_v1",
+      "points": [
+        {
+          "month": "2026/11",
+          "value": 215,
+          "range": 5
+        },
+        {
+          "month": "2026/12",
+          "value": 216,
+          "range": 7
+        },
+        {
+          "month": "2027/01",
+          "value": 218,
+          "range": 8
+        }
+      ]
     }
   ]
 }
