@@ -2072,6 +2072,20 @@
       "muneHigh": 632.0,
       "muneVolume": 180.0,
       "marketPrice": 218
+    },
+    {
+      "date": "2026/11/16",
+      "dayOfWeek": "Mon",
+      "yearMonth": "2026/11",
+      "momoLow": 799.0,
+      "momoWeighted": 867.0,
+      "momoHigh": 1035.0,
+      "momoVolume": 196.0,
+      "muneLow": 399.0,
+      "muneWeighted": 450.0,
+      "muneHigh": 632.0,
+      "muneVolume": 147.0,
+      "marketPrice": 217
     }
   ],
   "monthly": [
@@ -2257,7 +2271,7 @@
       "marketPrice": 215.0,
       "feedPrice": 106308.0,
       "feedChange": null,
-      "usdjpy": 159.88
+      "usdjpy": 159.78
     }
   ],
   "quarterly": [
@@ -2344,11 +2358,11 @@
       "period": "10〜12月期",
       "pricePerTon": 106308.0,
       "changeFromPrev": 3200.0,
-      "usdjpyAvg": 158.84,
-      "usdjpyHigh": 159.88,
+      "usdjpyAvg": 158.79,
+      "usdjpyHigh": 159.78,
       "usdjpyLow": 157.8,
       "notes": "令和8年10〜12月期比+3,200円。値上げ。とうもろこし上昇・大豆粕上昇・海上運賃上昇・円安が要因"
     }
   ],
-  "fetchedAt": "2026/11/17 08:33 JST"
+  "fetchedAt": "2026/11/17 13:01 JST"
 }
